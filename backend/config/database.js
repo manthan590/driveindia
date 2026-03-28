@@ -14,7 +14,8 @@ if (process.env.DATABASE_URL) {
         uri: process.env.DATABASE_URL,
         waitForConnections: true,
         connectionLimit: 5,
-        queueLimit: 0
+        queueLimit: 0,
+        ssl: { rejectUnauthorized: false }
     };
 } else {
     poolConfig = {
