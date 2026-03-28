@@ -10,8 +10,14 @@ require('dotenv').config();
 let poolConfig;
 
 if (process.env.DATABASE_URL) {
+    // Parse DATABASE_URL manually to avoid mysql2 uri+SSL auth bug
+    const url = new URL(process.env.DATABASE_URL);
     poolConfig = {
-        uri: process.env.DATABASE_URL,
+        host: url.hostname,
+        port: parseInt(url.port) || 3306,
+        user: decodeURIComponent(url.username),
+        password: decodeURIComponent(url.password),
+        database: url.pathname.replace('/', ''),
         waitForConnections: true,
         connectionLimit: 5,
         queueLimit: 0,
