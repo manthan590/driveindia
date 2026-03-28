@@ -9,6 +9,8 @@ const bodyParser = require('body-parser');
 const path = require('path');
 require('dotenv').config();
 
+console.log('Node.js version:', process.version);
+
 // Import database
 const pool = require('./config/database');
 

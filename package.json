@@ -1,0 +1,11 @@
+{
+  "name": "driveindia",
+  "version": "1.0.0",
+  "engines": {
+    "node": "20.x"
+  },
+  "scripts": {
+    "build": "cd backend && npm install --production",
+    "start": "node backend/server.js"
+  }
+}
