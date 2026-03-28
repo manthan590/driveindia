@@ -1,0 +1,320 @@
+/**
+ * Dashboard Layout Styles
+ * Top Navbar Design
+ */
+
+/* App Container */
+#app {
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* ============================================
+   Top Navbar
+   ============================================ */
+.top-navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    height: 56px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+}
+
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--syntax-blue);
+    font-weight: 700;
+    font-size: 1.1rem;
+    font-family: 'JetBrains Mono', monospace;
+    white-space: nowrap;
+}
+
+.logo i {
+    font-size: 1.3rem;
+    color: var(--syntax-green);
+}
+
+/* ============================================
+   Nav Links — Horizontal Tabs
+   ============================================ */
+.nav-links {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-links li {
+    margin: 0;
+}
+
+.nav-links a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    border-radius: var(--radius-md);
+    transition: var(--transition);
+    border: 1px solid transparent;
+}
+
+.nav-links a i {
+    font-size: 0.88rem;
+    color: var(--text-tertiary);
+    transition: var(--transition);
+}
+
+.nav-links a:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.nav-links a:hover i {
+    color: var(--syntax-blue);
+}
+
+.nav-links a.active {
+    background: rgba(96, 165, 250, 0.1);
+    color: var(--syntax-blue);
+    border-color: rgba(96, 165, 250, 0.2);
+}
+
+.nav-links a.active i {
+    color: var(--syntax-blue);
+}
+
+/* ============================================
+   User Info — Navbar Right
+   ============================================ */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    border-radius: var(--radius-md);
+    transition: var(--transition);
+    cursor: default;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-md);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--syntax-purple);
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.8rem;
+    margin: 0;
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+.user-role {
+    color: var(--syntax-green);
+    font-size: 0.65rem;
+    margin: 0;
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+}
+
+/* ============================================
+   Main Content
+   ============================================ */
+#mainDashboard {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+}
+
+/* ============================================
+   Content Container
+   ============================================ */
+.content-container {
+    flex: 1;
+    padding: 32px;
+    overflow-y: auto;
+}
+
+.page-content {
+    animation: fadeIn 0.2s ease-out;
+}
+
+.page-content.hidden {
+    display: none !important;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================
+   Scrollbar — Minimal
+   ============================================ */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-tertiary);
+}
+
+/* ============================================
+   Page Styles
+   ============================================ */
+.page {
+    height: 100%;
+}
+
+.page.hidden {
+    display: none !important;
+}
+
+/* ============================================
+   Logout Button
+   ============================================ */
+.btn-logout {
+    font-size: 0.82rem;
+}
+
+/* ============================================
+   Mobile Responsive
+   ============================================ */
+@media (max-width: 1024px) {
+    .top-navbar {
+        padding: 0 16px;
+        gap: 12px;
+    }
+
+    .navbar-left {
+        gap: 20px;
+    }
+
+    .nav-links a {
+        padding: 7px 12px;
+        font-size: 0.82rem;
+    }
+
+    .nav-links a span {
+        display: none;
+    }
+
+    .nav-links a i {
+        font-size: 1rem;
+    }
+
+    .content-container {
+        padding: 24px;
+    }
+}
+
+@media (max-width: 768px) {
+    .top-navbar {
+        flex-wrap: wrap;
+        height: auto;
+        padding: 10px 16px;
+        gap: 8px;
+    }
+
+    .navbar-left {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .nav-links {
+        order: 3;
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+
+    .navbar-right {
+        gap: 10px;
+    }
+
+    .user-details {
+        display: none;
+    }
+
+    .content-container {
+        padding: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-links a {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+        gap: 6px;
+    }
+
+    .content-container {
+        padding: 12px;
+    }
+}

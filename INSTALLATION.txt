@@ -1,0 +1,279 @@
+#!/bin/bash
+# DriveIndia Installation & Setup Script Guide
+# Complete setup instructions for all platforms
+
+# ============================================================
+# DRIVEINDIA SETUP INSTRUCTIONS
+# ============================================================
+
+echo "🚗 DriveIndia - Vehicle Rental Management System"
+echo "=================================================="
+echo ""
+
+# ============================================================
+# STEP 1: PREREQUISITES
+# ============================================================
+
+echo "📋 STEP 1: Check Prerequisites"
+echo "Required installations:"
+echo "  1. Node.js (v14+) - From nodejs.org"
+echo "  2. MySQL (v5.7+) - From mysql.com"
+echo "  3. Git (optional) - From git-scm.com"
+echo ""
+echo "Check installations:"
+echo "  node --version"
+echo "  npm --version"
+echo "  mysql --version"
+echo ""
+
+# ============================================================
+# STEP 2: DATABASE SETUP
+# ============================================================
+
+echo "🗄️  STEP 2: Database Setup"
+echo "=================================================="
+echo ""
+echo "Option A: Using Command Line"
+echo "  1. Start MySQL service"
+echo "     Windows: net start MySQL80"
+echo "     macOS:   brew services start mysql"
+echo "     Linux:   sudo systemctl start mysql"
+echo ""
+echo "  2. Connect to MySQL"
+echo "     mysql -u root -p"
+echo ""
+echo "  3. Run the schema file"
+echo "     SOURCE database/schema.sql;"
+echo ""
+echo "Option B: Using MySQL Workbench/GUI"
+echo "  1. Open MySQL Workbench"
+echo "  2. Create new connection to localhost:3306"
+echo "  3. File → Open SQL Script → database/schema.sql"
+echo "  4. Execute the script"
+echo ""
+
+# ============================================================
+# STEP 3: BACKEND SETUP
+# ============================================================
+
+echo "⚙️  STEP 3: Backend Setup"
+echo "=================================================="
+echo ""
+echo "Commands to run:"
+echo ""
+echo "  cd backend"
+echo "  npm install"
+echo ""
+echo "Create .env file from .env.example:"
+echo "  cp .env.example .env"
+echo "  (or copy contents manually)"
+echo ""
+echo "Edit .env with your database details:"
+echo "  DB_HOST=localhost"
+echo "  DB_USER=root"
+echo "  DB_PASSWORD=your_password"
+echo "  DB_NAME=vehicle_rental_db"
+echo "  PORT=5000"
+echo "  JWT_SECRET=your_secret_key"
+echo ""
+echo "Start the backend server:"
+echo "  npm start"
+echo ""
+echo "✅ Server should run on http://localhost:5000"
+echo "   Check: http://localhost:5000/api/health"
+echo ""
+
+# ============================================================
+# STEP 4: FRONTEND SETUP
+# ============================================================
+
+echo "🎨 STEP 4: Frontend Setup"
+echo "=================================================="
+echo ""
+echo "Option A: Using Python (Recommended)"
+echo "  cd frontend"
+echo "  python -m http.server 3000"
+echo ""
+echo "Option B: Using Node.js"
+echo "  cd frontend"
+echo "  npx http-server -p 3000"
+echo ""
+echo "Option C: Using Node Package"
+echo "  npm install -g http-server"
+echo "  cd frontend"
+echo "  http-server -p 3000"
+echo ""
+echo "✅ Frontend available at http://localhost:3000"
+echo ""
+
+# ============================================================
+# STEP 5: TEST THE APPLICATION
+# ============================================================
+
+echo "🧪 STEP 5: Test the Application"
+echo "=================================================="
+echo ""
+echo "Admin Login:"
+echo "  Email: admin@driveindia.com"
+echo "  Password: any password"
+echo ""
+echo "User Registration:"
+echo "  Click 'Register here' on login page"
+echo "  Fill sample data:"
+echo "    - Full Name: John Doe"
+echo "    - Email: john@example.com"
+echo "    - Phone: 9876543210"
+echo "    - Driving License: DL12345"
+echo "    - Aadhaar: 123456789012"
+echo "    - City: Mumbai"
+echo ""
+echo "Test Calendar System:"
+echo "  1. Login as user"
+echo "  2. Click 'Browse Vehicles'"
+echo "  3. Select any vehicle"
+echo "  4. Use interactive calendar to select dates"
+echo "  5. View real-time booking summary"
+echo ""
+echo "Test Payment:"
+echo "  1. Create a booking"
+echo "  2. Click 'Pay Now'"
+echo "  3. Select payment method (UPI/Card/Wallet)"
+echo "  4. Complete payment"
+echo "  5. Check booking status"
+echo ""
+
+# ============================================================
+# TROUBLESHOOTING
+# ============================================================
+
+echo "🐛 TROUBLESHOOTING"
+echo "=================================================="
+echo ""
+echo "Database Connection Error?"
+echo "  - Check MySQL is running"
+echo "  - Verify credentials in .env"
+echo "  - Ensure database 'vehicle_rental_db' exists"
+echo ""
+echo "Backend won't start?"
+echo "  - Check port 5000 is available"
+echo "  - npm install all dependencies"
+echo "  - Check .env file exists"
+echo ""
+echo "Frontend not loading?"
+echo "  - Check http server is running on port 3000"
+echo "  - Clear browser cache"
+echo "  - Check console for errors (F12)"
+echo ""
+echo "Calendar not working?"
+echo "  - Open browser DevTools (F12)"
+echo "  - Check Console tab for errors"
+echo "  - Verify API connection"
+echo ""
+echo "Payment simulation not working?"
+echo "  - Refresh page"
+echo "  - Check API endpoint is correct"
+echo "  - See console logs for details"
+echo ""
+
+# ============================================================
+# DEPLOYMENT
+# ============================================================
+
+echo "🚀 DEPLOYMENT"
+echo "=================================================="
+echo ""
+echo "Frontend Deployment (Static Site):"
+echo "  - Netlify: Drag and drop 'frontend' folder"
+echo "  - Vercel: Connect GitHub repository"
+echo "  - AWS S3: Upload frontend files to S3"
+echo ""
+echo "Backend Deployment:"
+echo "  - Heroku: git push heroku main"
+echo "  - AWS EC2: Upload and run with PM2"
+echo "  - DigitalOcean: Simple one-click deployment"
+echo ""
+echo "Remember to:"
+echo "  - Update API_BASE_URL in api.js"
+echo "  - Set environment variables on server"
+echo "  - Use HTTPS in production"
+echo "  - Enable proper CORS"
+echo ""
+
+# ============================================================
+# STRUCTURE OVERVIEW
+# ============================================================
+
+echo "📁 PROJECT STRUCTURE"
+echo "=================================================="
+echo ""
+echo "DriveIndia/"
+echo "├── frontend/            # Web UI (HTML/CSS/JS)"
+echo "│   ├── index.html      # Main page"
+echo "│   ├── css/            # Styles"
+echo "│   └── js/             # JavaScript"
+echo "├── backend/            # Express server"
+echo "│   ├── server.js       # Main server"
+echo "│   ├── routes/         # API routes"
+echo "│   ├── controllers/    # Business logic"
+echo "│   ├── middleware/     # Auth middleware"
+echo "│   └── package.json    # Dependencies"
+echo "└── database/           # MySQL setup"
+echo "    └── schema.sql      # Database schema"
+echo ""
+
+# ============================================================
+# DOCUMENTATION
+# ============================================================
+
+echo "📚 DOCUMENTATION"
+echo "=================================================="
+echo ""
+echo "Start with these files:"
+echo "  - README.md            # Overview"
+echo "  - QUICKSTART.md        # 5-minute setup"
+echo "  - API_DOCUMENTATION.md # API reference"
+echo "  - CALENDAR_GUIDE.md    # Calendar details"
+echo ""
+
+# ============================================================
+# SUCCESS CHECKLIST
+# ============================================================
+
+echo "✅ SUCCESS CHECKLIST"
+echo "=================================================="
+echo ""
+echo "Before going live, verify:"
+echo ""
+echo "Database:"
+echo "  ☐ MySQL running"
+echo "  ☐ Database 'vehicle_rental_db' created"
+echo "  ☐ Tables created with sample data"
+echo ""
+echo "Backend:"
+echo "  ☐ npm dependencies installed"
+echo "  ☐ .env file configured"
+echo "  ☐ Server running on port 5000"
+echo "  ☐ API endpoints responding"
+echo ""
+echo "Frontend:"
+echo "  ☐ Frontend running on port 3000"
+echo "  ☐ All pages loading"
+echo "  ☐ Can login/register"
+echo "  ☐ API calls working"
+echo ""
+echo "Features:"
+echo "  ☐ Calendar selecting dates"
+echo "  ☐ Bookings creating successfully"
+echo "  ☐ Payment simulation working"
+echo "  ☐ Admin dashboard showing stats"
+echo ""
+echo "🎉 YOU'RE ALL SET!"
+echo ""
+echo "Start the app:"
+echo "  1. Terminal 1: cd backend && npm start"
+echo "  2. Terminal 2: cd frontend && python -m http.server 3000"
+echo "  3. Open: http://localhost:3000"
+echo ""
+echo "=================================================="
+echo "For more help, see the documentation files"
+echo "========================🚗========================"

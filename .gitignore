@@ -1,0 +1,9 @@
+node_modules/
+.env
+uploads/profiles/*
+uploads/vehicles/*
+!uploads/profiles/.gitkeep
+!uploads/vehicles/.gitkeep
+*.log
+.DS_Store
+Thumbs.db

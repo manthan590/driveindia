@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DriveIndia - Vehicle Rental Management System</title>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Leaflet Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Razorpay Checkout -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/calendar.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="loading-spinner hidden">
+            <div class="spinner"></div>
+            <p>Loading...</p>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div id="toastContainer" class="toast-container"></div>
+
+        <!-- Landing Page -->
+        <div id="landingPage" class="page hidden">
+            <!-- Landing Page Container will be filled by JS -->
+        </div>
+
+        <!-- Auth Pages -->
+        <div id="authPage" class="page hidden">
+            <!-- Auth Pages Container will be filled by JS -->
+        </div>
+
+        <!-- Main Dashboard -->
+        <div id="mainDashboard" class="page hidden">
+            <!-- Top Navbar -->
+            <nav class="top-navbar">
+                <div class="navbar-left">
+                    <div class="logo">
+                        <i class="fas fa-car"></i>
+                        <span>DriveIndia</span>
+                    </div>
+                    <ul id="navLinks" class="nav-links">
+                        <!-- Will be populated by JS based on user role -->
+                    </ul>
+                </div>
+                <div class="navbar-right">
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div class="user-details">
+                            <p class="user-name" id="userNameDisplay">User</p>
+                            <p class="user-role" id="userRoleDisplay">User</p>
+                        </div>
+                    </div>
+                    <button id="themeToggle" class="btn btn-icon" title="Toggle dark mode">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button id="logoutBtn" class="btn btn-logout">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </nav>
+
+            <!-- Main Content Area -->
+            <main class="main-content">
+                <!-- Content Container -->
+                <div class="content-container">
+                    <!-- User Dashboard -->
+                    <section id="userDashboard" class="page-content hidden">
+                        <!-- Will be populated by JS -->
+                    </section>
+
+                    <!-- Vehicles Browse -->
+                    <section id="vehiclesBrowse" class="page-content hidden">
+                        <!-- Will be populated by JS -->
+                    </section>
+
+                    <!-- Booking Details -->
+                    <section id="bookingDetails" class="page-content hidden">
+                        <!-- Will be populated by JS -->
+                    </section>
+
+                    <!-- Admin Dashboard -->
+                    <section id="adminDashboard" class="page-content hidden">
+                        <!-- Will be populated by JS -->
+                    </section>
+
+                    <!-- Admin Vehicles -->
+                    <section id="adminVehicles" class="page-content hidden">
+                        <!-- Will be populated by JS -->
+                    </section>
+
+                    <!-- Admin Bookings -->
+                    <section id="adminBookings" class="page-content hidden">
+                        <!-- Will be populated by JS -->
+                    </section>
+
+                    <!-- User Profile -->
+                    <section id="profilePage" class="page-content hidden">
+                        <!-- Will be populated by JS -->
+                    </section>
+
+                    <!-- Subscription Plans -->
+                    <section id="plansPage" class="page-content hidden">
+                        <!-- Will be populated by JS -->
+                    </section>
+
+                    <!-- About Us -->
+                    <section id="aboutPage" class="page-content hidden">
+                        <!-- Will be populated by JS -->
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- JavaScript Files -->
+    <script src="js/api.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/calendar.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/vehicles.js"></script>
+    <script src="js/booking.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
