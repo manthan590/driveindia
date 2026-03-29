@@ -549,9 +549,6 @@ class AuthModule {
                 throw new Error('Passwords do not match');
             }
 
-            // Remove confirm_password before sending to API
-            delete formData.confirm_password;
-
             const response = await api.auth.register(formData);
 
             if (response.success) {
