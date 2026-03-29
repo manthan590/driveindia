@@ -91,8 +91,8 @@ const verifyPayment = async (req, res) => {
             );
 
             // Confirm booking
-            await connection.query(
-                'UPDATE bookings SET status = "Confirmed" WHERE id = ? AND user_id = ?',
+                await connection.query(
+                    "UPDATE bookings SET status = 'Confirmed' WHERE id = ? AND user_id = ?",
                 [booking_id, userId]
             );
 

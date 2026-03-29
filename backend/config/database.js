@@ -5,6 +5,7 @@
 
 const mysql = require('mysql2/promise');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 // Build pool config — supports DATABASE_URL or individual env vars
@@ -74,6 +75,40 @@ console.log(`Database config: ${configSource}`);
 
 const pool = mysql.createPool(poolConfig);
 
+async function ensureSchema() {
+    const targetDbName = process.env.DB_NAME || poolConfig.database || 'defaultdb';
+
+    const [tables] = await pool.query(
+        "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = ? AND table_name = 'users'",
+        [targetDbName]
+    );
+
+    if (tables[0].c > 0) {
+        return;
+    }
+
+    console.log('⚠ users table not found. Initializing schema...');
+
+    const schemaPath = path.join(__dirname, '..', '..', 'database', 'schema_cloud.sql');
+    const sql = fs.readFileSync(schemaPath, 'utf8');
+
+    // Execute statements one-by-one so we don't need multiStatements enabled.
+    const statements = sql
+        .split(';')
+        .map(chunk => chunk
+            .split('\n')
+            .filter(line => !line.trim().startsWith('--'))
+            .join('\n')
+            .trim())
+        .filter(Boolean);
+
+    for (const statement of statements) {
+        await pool.query(statement);
+    }
+
+    console.log('✓ Database schema initialized successfully');
+}
+
 // Test connection
 pool.getConnection()
     .then(connection => {
@@ -90,5 +125,7 @@ pool.getConnection()
             );
         }
     });
+
+pool.ensureSchema = ensureSchema;
 
 module.exports = pool;

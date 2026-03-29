@@ -6,6 +6,7 @@
   },
   "scripts": {
     "build": "cd backend && npm install --production",
-    "start": "node backend/server.js"
+    "start": "node backend/server.js",
+    "db:init": "node backend/scripts/initAivenSchema.js"
   }
 }

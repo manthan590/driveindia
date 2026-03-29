@@ -84,9 +84,22 @@ app.get('*', (req, res) => {
 
 // Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`\n🚗 Vehicle Rental Server running on http://localhost:${PORT}`);
-    console.log(`📊 API Documentation available at http://localhost:${PORT}/api/health\n`);
-});
+async function startServer() {
+    try {
+        if (typeof pool.ensureSchema === 'function') {
+            await pool.ensureSchema();
+        }
+
+        app.listen(PORT, () => {
+            console.log(`\n🚗 Vehicle Rental Server running on http://localhost:${PORT}`);
+            console.log(`📊 API Documentation available at http://localhost:${PORT}/api/health\n`);
+        });
+    } catch (error) {
+        console.error('✗ Server startup failed:', error.message);
+        process.exit(1);
+    }
+}
+
+startServer();
 
 module.exports = app;

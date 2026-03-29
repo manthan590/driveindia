@@ -47,7 +47,7 @@ const createSubscriptionOrder = async (req, res) => {
 
             // Check for existing active subscription
             const [existing] = await connection.query(
-                'SELECT id FROM subscriptions WHERE user_id = ? AND status = "active" AND end_date > NOW()',
+                "SELECT id FROM subscriptions WHERE user_id = ? AND status = 'active' AND end_date > NOW()",
                 [userId]
             );
             if (existing.length > 0) {
@@ -216,7 +216,7 @@ const cancelSubscription = async (req, res) => {
         const connection = await pool.getConnection();
         try {
             const [result] = await connection.query(
-                'UPDATE subscriptions SET status = "cancelled" WHERE user_id = ? AND status = "active"',
+                "UPDATE subscriptions SET status = 'cancelled' WHERE user_id = ? AND status = 'active'",
                 [userId]
             );
             connection.release();

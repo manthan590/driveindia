@@ -13,7 +13,7 @@ const getDashboardStats = async (req, res) => {
         try {
             // Total users
             const [userCount] = await connection.query(
-                'SELECT COUNT(*) as count FROM users WHERE role = "user"'
+                "SELECT COUNT(*) as count FROM users WHERE role = 'user'"
             );
 
             // Total bookings
@@ -28,17 +28,17 @@ const getDashboardStats = async (req, res) => {
 
             // Revenue (from successful payments)
             const [revenue] = await connection.query(
-                'SELECT SUM(amount) as total FROM payments WHERE status = "Success"'
+                "SELECT SUM(amount) as total FROM payments WHERE status = 'Success'"
             );
 
             // Completed bookings
             const [completedBookings] = await connection.query(
-                'SELECT COUNT(*) as count FROM bookings WHERE status = "Completed"'
+                "SELECT COUNT(*) as count FROM bookings WHERE status = 'Completed'"
             );
 
             // Pending bookings
             const [pendingBookings] = await connection.query(
-                'SELECT COUNT(*) as count FROM bookings WHERE status = "Pending"'
+                "SELECT COUNT(*) as count FROM bookings WHERE status = 'Pending'"
             );
 
             connection.release();
