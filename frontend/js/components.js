@@ -7,8 +7,18 @@ class Components {
     // Resolve image URL (handles relative /uploads/ paths and full http URLs)
     static getImageUrl(url) {
         if (!url) return '';
-        if (url.startsWith('http')) return url;
-        return `http://localhost:5000${url}`;
+        if (url.startsWith('http://') || url.startsWith('https://')) return url;
+
+        const backendOrigin =
+            window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                ? 'http://localhost:5000'
+                : window.location.origin;
+
+        if (url.startsWith('/')) {
+            return `${backendOrigin}${url}`;
+        }
+
+        return `${backendOrigin}/${url}`;
     }
 
     // Create vehicle card
