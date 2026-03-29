@@ -135,7 +135,7 @@ VALUES
 ('Bajaj Avenger', 'Bike', 'Petrol', 900, 'Delhi', TRUE, 'https://placehold.co/300x200?text=Bajaj+Avenger', 'DL02KL5161', 2, 'Cruiser motorcycle'),
 ('Honda Activa', 'Scooter', 'Petrol', 600, 'Pune', TRUE, 'https://placehold.co/300x200?text=Honda+Activa', 'MH04MN7181', 2, 'Popular automatic scooter'),
 ('Mahindra XUV500', 'Car', 'Diesel', 3500, 'Mumbai', TRUE, 'https://placehold.co/300x200?text=Mahindra+XUV', 'MH05OP9201', 7, 'Premium SUV with all features')
-ON DUPLICATE KEY UPDATE id=id;
+ON DUPLICATE KEY UPDATE image_url = VALUES(image_url);
 
 -- Default Plans
 INSERT INTO plans (name, duration_type, duration_days, price, discount_percent, features, roadside_assistance, unlimited_km, priority_support, free_cancellation)

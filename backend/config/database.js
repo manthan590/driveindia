@@ -83,12 +83,6 @@ async function ensureSchema() {
         [targetDbName]
     );
 
-    if (tables[0].c > 0) {
-        return;
-    }
-
-    console.log('⚠ users table not found. Initializing schema...');
-
     const schemaPath = path.join(__dirname, '..', '..', 'database', 'schema_cloud.sql');
     const sql = fs.readFileSync(schemaPath, 'utf8');
 
@@ -102,11 +96,22 @@ async function ensureSchema() {
             .trim())
         .filter(Boolean);
 
-    for (const statement of statements) {
-        await pool.query(statement);
+    if (tables[0].c === 0) {
+        console.log('⚠ users table not found. Initializing schema...');
+        for (const statement of statements) {
+            await pool.query(statement);
+        }
+        console.log('✓ Database schema initialized successfully');
+    } else {
+        // Tables exist — still run seed statements so image_url / data fixes are applied
+        const seedStatements = statements.filter(s =>
+            s.toUpperCase().startsWith('INSERT') || s.toUpperCase().startsWith('UPDATE')
+        );
+        for (const statement of seedStatements) {
+            await pool.query(statement).catch(() => {}); // ignore duplicate/constraint errors
+        }
+        console.log('✓ Database seed data refreshed');
     }
-
-    console.log('✓ Database schema initialized successfully');
 }
 
 // Test connection

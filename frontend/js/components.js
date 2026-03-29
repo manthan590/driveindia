@@ -28,7 +28,7 @@ class Components {
         return `
             <div class="card vehicle-card" data-vehicle-id="${vehicle.id}">
                 <div class="card-image" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); height: 200px; border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 16px;">
-                    ${vehicle.image_url ? `<img src="${imgUrl}" alt="${vehicle.name}" style="width: 100%; height: 100%; object-fit: cover;">` : `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;"><i class="fas fa-car" style="font-size: 3rem; color: white; opacity: 0.5;"></i></div>`}
+                    <img src="${imgUrl}" alt="${vehicle.name}" style="width: 100%; height: 100%; object-fit: cover; display: ${vehicle.image_url ? 'block' : 'none'};" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';"><div style="width:100%;height:100%;display:${vehicle.image_url ? 'none' : 'flex'};align-items:center;justify-content:center;" class="img-fallback-${vehicle.id}"><i class="fas fa-car" style="font-size:3rem;color:white;opacity:0.5;"></i></div>
                 </div>
                 <div class="card-body">
                     <h4>${vehicle.name}</h4>
@@ -68,7 +68,7 @@ class Components {
                 <div>
                     <div class="card">
                         <div style="background: linear-gradient(135deg, var(--primary), var(--secondary)); height: 300px; border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 16px;">
-                            ${vehicle.image_url ? `<img src="${imgUrl}" alt="${vehicle.name}" style="width: 100%; height: 100%; object-fit: cover;">` : `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;"><i class="fas fa-car" style="font-size: 5rem; color: white; opacity: 0.3;"></i></div>`}
+                            <img src="${imgUrl}" alt="${vehicle.name}" style="width:100%;height:100%;object-fit:cover;display:${vehicle.image_url ? 'block' : 'none'};" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';"><div style="width:100%;height:100%;display:${vehicle.image_url ? 'none' : 'flex'};align-items:center;justify-content:center;"><i class="fas fa-car" style="font-size:5rem;color:white;opacity:0.3;"></i></div>
                         </div>
                         <div class="card-body">
                             <h3>${vehicle.name}</h3>
