@@ -8,6 +8,7 @@ RUN cd backend && npm install --production
 
 COPY backend/ ./backend/
 COPY frontend/ ./frontend/
+COPY database/ ./database/
 
 EXPOSE 10000
 
