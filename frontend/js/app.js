@@ -68,10 +68,10 @@ class Application {
             { label: 'KYC Verification', icon: 'id-card', page: 'adminKYC', onclick: () => { adminModule.loadKYCApplications(); this.showPage('adminKYC'); } },
             { label: 'About Us', icon: 'info-circle', page: 'aboutPage', onclick: () => { this.showAboutPage(); } }
         ] : [
-            { label: 'My Bookings', icon: 'calendar-check', page: 'userDashboard', onclick: () => { bookingModule.loadBookings(); this.showPage('userDashboard'); } },
             { label: 'Browse Vehicles', icon: 'car', page: 'vehiclesBrowse', onclick: () => { vehiclesModule.loadVehicles(); this.showPage('vehiclesBrowse'); } },
             { label: 'Plans', icon: 'crown', page: 'plansPage', onclick: () => { this.showPlansPage(); } },
             { label: 'Profile', icon: 'user-cog', page: 'profilePage', onclick: () => { this.showProfilePage(); } },
+            { label: 'My Bookings', icon: 'calendar-check', page: 'userDashboard', onclick: () => { bookingModule.loadBookings(); this.showPage('userDashboard'); } },
             { label: 'About Us', icon: 'info-circle', page: 'aboutPage', onclick: () => { this.showAboutPage(); } }
         ];
 
