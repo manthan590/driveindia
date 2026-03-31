@@ -1,13 +1,14 @@
 /**
  * Payment Controller
- * Handles Razorpay payment integration
+ * UPI QR Code payment flow (manual confirmation)
  */
 
-const crypto = require('crypto');
 const pool = require('../config/database');
-const { getRazorpay } = require('../config/razorpay');
 
-// Create Razorpay Order for Booking
+const UPI_ID = 'mparab046@oksbi';
+const UPI_NAME = 'Manthan Parab';
+
+// Initiate payment — return UPI details for QR code
 const createOrder = async (req, res) => {
     try {
         const userId = req.userId;
@@ -34,21 +35,16 @@ const createOrder = async (req, res) => {
                 return res.status(400).json({ success: false, message: 'Booking is not in pending status' });
             }
 
-            // Create Razorpay order (amount in paise)
-            const order = await getRazorpay().orders.create({
-                amount: Math.round(booking.total_amount * 100),
-                currency: 'INR',
-                receipt: `booking_${booking_id}`,
-                notes: { booking_id: String(booking_id), user_id: String(userId) }
-            });
+            const refId = 'DI' + Date.now() + Math.floor(Math.random() * 1000);
 
             return res.json({
                 success: true,
                 data: {
-                    order_id: order.id,
-                    amount: order.amount,
-                    currency: order.currency,
-                    key_id: process.env.RAZORPAY_KEY_ID
+                    upi_id: UPI_ID,
+                    upi_name: UPI_NAME,
+                    amount: booking.total_amount,
+                    ref_id: refId,
+                    booking_id: booking.id
                 }
             });
         } catch (error) {
@@ -61,38 +57,43 @@ const createOrder = async (req, res) => {
     }
 };
 
-// Verify Razorpay Payment & Confirm Booking
+// Confirm payment (user confirms after UPI payment)
 const verifyPayment = async (req, res) => {
     try {
         const userId = req.userId;
-        const { razorpay_order_id, razorpay_payment_id, razorpay_signature, booking_id } = req.body;
+        const { booking_id, transaction_id } = req.body;
 
-        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !booking_id) {
-            return res.status(400).json({ success: false, message: 'Missing payment verification data' });
-        }
-
-        // Verify signature
-        const expectedSignature = crypto
-            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-            .update(razorpay_order_id + '|' + razorpay_payment_id)
-            .digest('hex');
-
-        if (expectedSignature !== razorpay_signature) {
-            return res.status(400).json({ success: false, message: 'Payment verification failed — invalid signature' });
+        if (!booking_id || !transaction_id) {
+            return res.status(400).json({ success: false, message: 'Booking ID and UPI Transaction ID are required' });
         }
 
         const connection = await pool.getConnection();
         try {
+            const [bookings] = await connection.query(
+                'SELECT id, total_amount, status FROM bookings WHERE id = ? AND user_id = ?',
+                [booking_id, userId]
+            );
+
+            if (bookings.length === 0) {
+                connection.release();
+                return res.status(404).json({ success: false, message: 'Booking not found' });
+            }
+
+            if (bookings[0].status !== 'Pending') {
+                connection.release();
+                return res.status(400).json({ success: false, message: 'Booking is already processed' });
+            }
+
             // Insert payment record
             const [paymentResult] = await connection.query(
                 `INSERT INTO payments (booking_id, user_id, payment_method, amount, transaction_id, status)
-                 VALUES (?, ?, 'Razorpay', (SELECT total_amount FROM bookings WHERE id = ?), ?, 'Success')`,
-                [booking_id, userId, booking_id, razorpay_payment_id]
+                 VALUES (?, ?, 'UPI', ?, ?, 'Success')`,
+                [booking_id, userId, bookings[0].total_amount, transaction_id]
             );
 
             // Confirm booking
-                await connection.query(
-                    "UPDATE bookings SET status = 'Confirmed' WHERE id = ? AND user_id = ?",
+            await connection.query(
+                "UPDATE bookings SET status = 'Confirmed' WHERE id = ? AND user_id = ?",
                 [booking_id, userId]
             );
 
@@ -100,10 +101,10 @@ const verifyPayment = async (req, res) => {
 
             return res.json({
                 success: true,
-                message: 'Payment verified & booking confirmed!',
+                message: 'Payment confirmed & booking confirmed!',
                 data: {
                     paymentId: paymentResult.insertId,
-                    transactionId: razorpay_payment_id,
+                    transactionId: transaction_id,
                     status: 'Success',
                     bookingStatus: 'Confirmed'
                 }
@@ -114,22 +115,20 @@ const verifyPayment = async (req, res) => {
         }
     } catch (error) {
         console.error('Verify payment error:', error);
-        res.status(500).json({ success: false, message: 'Payment verification failed' });
+        res.status(500).json({ success: false, message: 'Payment confirmation failed' });
     }
 };
 
-// Get Razorpay Key (public route for frontend)
+// Get UPI info (public route)
 const getKey = (req, res) => {
-    res.json({ success: true, key_id: process.env.RAZORPAY_KEY_ID });
+    res.json({ success: true, upi_id: UPI_ID, upi_name: UPI_NAME });
 };
 
 // Get Payment History
 const getPaymentHistory = async (req, res) => {
     try {
         const userId = req.userId;
-
         const connection = await pool.getConnection();
-
         try {
             const [payments] = await connection.query(
                 `SELECT p.*, b.total_amount as booking_amount, v.name as vehicle_name
@@ -140,31 +139,16 @@ const getPaymentHistory = async (req, res) => {
                  ORDER BY p.payment_date DESC`,
                 [userId]
             );
-
             connection.release();
-
-            return res.status(200).json({
-                success: true,
-                count: payments.length,
-                data: payments
-            });
+            return res.status(200).json({ success: true, count: payments.length, data: payments });
         } catch (error) {
             connection.release();
             throw error;
         }
     } catch (error) {
         console.error('Get payment history error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to fetch payment history',
-            error: error.message
-        });
+        res.status(500).json({ success: false, message: 'Failed to fetch payment history' });
     }
 };
 
-module.exports = {
-    createOrder,
-    verifyPayment,
-    getKey,
-    getPaymentHistory
-};
+module.exports = { createOrder, verifyPayment, getKey, getPaymentHistory };

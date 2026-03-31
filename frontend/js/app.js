@@ -205,7 +205,7 @@ class Application {
             const response = await api.bookings.getById(bookingId);
             const booking = response.data;
 
-            // Create Razorpay order
+            // Get UPI payment details from server
             const orderRes = await api.payments.createOrder({ booking_id: bookingId });
             if (!orderRes.success) {
                 Toast.error(orderRes.message || 'Failed to create payment order');
@@ -213,65 +213,74 @@ class Application {
                 return;
             }
 
-            const { order_id, amount, currency, key_id } = orderRes.data;
-
-            // Get user info for prefill
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const { upi_id, upi_name, amount, ref_id } = orderRes.data;
+            const upiUrl = `upi://pay?pa=${encodeURIComponent(upi_id)}&pn=${encodeURIComponent(upi_name)}&am=${amount}&tn=${encodeURIComponent('DriveIndia Booking ' + bookingId)}&cu=INR`;
+            const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUrl)}`;
 
             Spinner.hide();
 
-            // Open Razorpay Checkout
-            const options = {
-                key: key_id,
-                amount: amount,
-                currency: currency,
-                name: 'DriveIndia',
-                description: `Booking #${bookingId} — ${booking.vehicle_name || 'Vehicle Rental'}`,
-                order_id: order_id,
-                handler: async (response) => {
-                    // Payment successful — verify on server
-                    try {
-                        Spinner.show();
-                        const verifyRes = await api.payments.verify({
-                            razorpay_order_id: response.razorpay_order_id,
-                            razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_signature: response.razorpay_signature,
-                            booking_id: bookingId
-                        });
+            // Show UPI QR payment modal
+            const overlay = document.createElement('div');
+            overlay.id = 'upiPaymentOverlay';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
+            overlay.innerHTML = `
+                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:16px;padding:32px;max-width:400px;width:90%;text-align:center;">
+                    <h3 style="margin:0 0 4px;font-family:'JetBrains Mono',monospace;color:var(--syntax-green);"><i class="fas fa-qrcode"></i> Pay via UPI</h3>
+                    <p style="color:var(--text-secondary);font-size:0.85rem;margin:0 0 20px;">Booking #${bookingId} — ${booking.vehicle_name || 'Vehicle Rental'}</p>
+                    <div style="background:white;border-radius:12px;padding:20px;display:inline-block;margin-bottom:16px;">
+                        <img src="${qrApiUrl}" alt="UPI QR Code" style="width:250px;height:250px;display:block;">
+                    </div>
+                    <p style="font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:700;color:var(--syntax-green);margin:0 0 4px;">₹${amount}</p>
+                    <p style="color:var(--text-secondary);font-size:0.82rem;margin:0 0 16px;">UPI ID: <strong style="color:var(--text-primary);">${upi_id}</strong></p>
+                    <div style="margin-bottom:20px;">
+                        <p style="color:var(--text-tertiary);font-size:0.8rem;margin:0 0 8px;">Scan QR code with any UPI app (GPay, PhonePe, Paytm)</p>
+                        <p style="color:var(--text-tertiary);font-size:0.75rem;">Ref: ${ref_id}</p>
+                    </div>
+                    <div style="margin-bottom:12px;">
+                        <label style="display:block;text-align:left;color:var(--text-secondary);font-size:0.82rem;margin-bottom:6px;">UPI Transaction ID / UTR Number</label>
+                        <input type="text" id="upiTxnId" placeholder="Enter 12-digit UTR or transaction ID" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-tertiary);color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:0.9rem;">
+                    </div>
+                    <button id="upiConfirmBtn" class="btn btn-primary w-full" style="justify-content:center;margin-bottom:8px;"><i class="fas fa-check-circle"></i> I Have Paid</button>
+                    <button id="upiCancelBtn" class="btn btn-outline w-full" style="justify-content:center;border-color:var(--syntax-red);color:var(--syntax-red);"><i class="fas fa-times"></i> Cancel</button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
 
-                        if (verifyRes.success) {
-                            Toast.success(`Payment successful! ID: ${response.razorpay_payment_id}`);
-                            setTimeout(() => {
-                                bookingModule.loadBookings();
-                                app.showPage('userDashboard');
-                            }, 1500);
-                        } else {
-                            Toast.error(verifyRes.message || 'Payment verification failed');
-                        }
-                    } catch (err) {
-                        Toast.error('Payment verification failed');
-                    } finally {
-                        Spinner.hide();
-                    }
-                },
-                prefill: {
-                    name: user.full_name || '',
-                    email: user.email || '',
-                    contact: user.phone || ''
-                },
-                theme: { color: '#4ade80' },
-                modal: {
-                    ondismiss: () => {
-                        Toast.warning('Payment cancelled');
-                    }
+            // Confirm button
+            document.getElementById('upiConfirmBtn').addEventListener('click', async () => {
+                const txnId = document.getElementById('upiTxnId').value.trim();
+                if (!txnId) {
+                    Toast.warning('Please enter your UPI Transaction ID');
+                    return;
                 }
-            };
-
-            const rzp = new Razorpay(options);
-            rzp.on('payment.failed', (response) => {
-                Toast.error(`Payment failed: ${response.error.description}`);
+                try {
+                    Spinner.show();
+                    const verifyRes = await api.payments.verify({
+                        booking_id: bookingId,
+                        transaction_id: txnId
+                    });
+                    if (verifyRes.success) {
+                        overlay.remove();
+                        Toast.success('Payment confirmed! Booking confirmed.');
+                        setTimeout(() => {
+                            bookingModule.loadBookings();
+                            app.showPage('userDashboard');
+                        }, 1500);
+                    } else {
+                        Toast.error(verifyRes.message || 'Payment confirmation failed');
+                    }
+                } catch (err) {
+                    Toast.error('Payment confirmation failed');
+                } finally {
+                    Spinner.hide();
+                }
             });
-            rzp.open();
+
+            // Cancel button
+            document.getElementById('upiCancelBtn').addEventListener('click', () => {
+                overlay.remove();
+                Toast.warning('Payment cancelled');
+            });
         } catch (error) {
             Toast.error('Failed to initiate payment');
             Spinner.hide();
@@ -986,71 +995,82 @@ class Application {
                     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
                     btn.disabled = true;
 
-                    // Create Razorpay order for subscription
+                    // Create order for subscription
                     const orderRes = await api.subscriptions.createOrder({ plan_id: planId });
 
                     // Free plan — already activated by backend
-                    if (orderRes.data && !orderRes.data.order_id) {
+                    if (orderRes.data && !orderRes.data.upi_id) {
                         Toast.success(orderRes.message);
                         Spinner.hide();
                         this.showPlansPage();
                         return;
                     }
 
-                    const { order_id, amount, currency, key_id, plan_name } = orderRes.data;
-                    const user = JSON.parse(localStorage.getItem('user') || '{}');
+                    const { upi_id, upi_name, amount, ref_id, plan_name } = orderRes.data;
+                    const upiUrl = `upi://pay?pa=${encodeURIComponent(upi_id)}&pn=${encodeURIComponent(upi_name)}&am=${amount}&tn=${encodeURIComponent('DriveIndia ' + plan_name)}&cu=INR`;
+                    const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUrl)}`;
 
                     Spinner.hide();
 
-                    // Open Razorpay Checkout
-                    const options = {
-                        key: key_id,
-                        amount: amount,
-                        currency: currency,
-                        name: 'DriveIndia',
-                        description: `Subscription — ${plan_name}`,
-                        order_id: order_id,
-                        handler: async (response) => {
-                            try {
-                                Spinner.show();
-                                const verifyRes = await api.subscriptions.verify({
-                                    razorpay_order_id: response.razorpay_order_id,
-                                    razorpay_payment_id: response.razorpay_payment_id,
-                                    razorpay_signature: response.razorpay_signature,
-                                    plan_id: planId
-                                });
-                                if (verifyRes.success) {
-                                    Toast.success(verifyRes.message);
-                                    this.showPlansPage();
-                                } else {
-                                    Toast.error(verifyRes.message || 'Subscription verification failed');
-                                }
-                            } catch (err) {
-                                Toast.error(err.message || 'Subscription verification failed');
-                            } finally { Spinner.hide(); }
-                        },
-                        prefill: {
-                            name: user.full_name || '',
-                            email: user.email || '',
-                            contact: user.phone || ''
-                        },
-                        theme: { color: '#4ade80' },
-                        modal: {
-                            ondismiss: () => {
-                                btn.innerHTML = '<i class="fas fa-bolt"></i> Subscribe';
-                                btn.disabled = false;
-                                Toast.warning('Payment cancelled');
-                            }
-                        }
-                    };
+                    // Show UPI QR payment modal
+                    const overlay = document.createElement('div');
+                    overlay.id = 'upiSubOverlay';
+                    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
+                    overlay.innerHTML = `
+                        <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:16px;padding:32px;max-width:400px;width:90%;text-align:center;">
+                            <h3 style="margin:0 0 4px;font-family:'JetBrains Mono',monospace;color:var(--syntax-green);"><i class="fas fa-qrcode"></i> Pay via UPI</h3>
+                            <p style="color:var(--text-secondary);font-size:0.85rem;margin:0 0 20px;">Subscription — ${plan_name}</p>
+                            <div style="background:white;border-radius:12px;padding:20px;display:inline-block;margin-bottom:16px;">
+                                <img src="${qrApiUrl}" alt="UPI QR Code" style="width:250px;height:250px;display:block;">
+                            </div>
+                            <p style="font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:700;color:var(--syntax-green);margin:0 0 4px;">₹${amount}</p>
+                            <p style="color:var(--text-secondary);font-size:0.82rem;margin:0 0 16px;">UPI ID: <strong style="color:var(--text-primary);">${upi_id}</strong></p>
+                            <div style="margin-bottom:20px;">
+                                <p style="color:var(--text-tertiary);font-size:0.8rem;margin:0 0 8px;">Scan QR code with any UPI app (GPay, PhonePe, Paytm)</p>
+                                <p style="color:var(--text-tertiary);font-size:0.75rem;">Ref: ${ref_id}</p>
+                            </div>
+                            <div style="margin-bottom:12px;">
+                                <label style="display:block;text-align:left;color:var(--text-secondary);font-size:0.82rem;margin-bottom:6px;">UPI Transaction ID / UTR Number</label>
+                                <input type="text" id="upiSubTxnId" placeholder="Enter 12-digit UTR or transaction ID" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-tertiary);color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:0.9rem;">
+                            </div>
+                            <button id="upiSubConfirmBtn" class="btn btn-primary w-full" style="justify-content:center;margin-bottom:8px;"><i class="fas fa-check-circle"></i> I Have Paid</button>
+                            <button id="upiSubCancelBtn" class="btn btn-outline w-full" style="justify-content:center;border-color:var(--syntax-red);color:var(--syntax-red);"><i class="fas fa-times"></i> Cancel</button>
+                        </div>
+                    `;
+                    document.body.appendChild(overlay);
 
-                    const rzp = new Razorpay(options);
-                    rzp.on('payment.failed', (response) => {
-                        Toast.error(`Payment failed: ${response.error.description}`);
+                    // Confirm
+                    document.getElementById('upiSubConfirmBtn').addEventListener('click', async () => {
+                        const txnId = document.getElementById('upiSubTxnId').value.trim();
+                        if (!txnId) {
+                            Toast.warning('Please enter your UPI Transaction ID');
+                            return;
+                        }
+                        try {
+                            Spinner.show();
+                            const verifyRes = await api.subscriptions.verify({
+                                transaction_id: txnId,
+                                plan_id: planId
+                            });
+                            if (verifyRes.success) {
+                                overlay.remove();
+                                Toast.success(verifyRes.message);
+                                this.showPlansPage();
+                            } else {
+                                Toast.error(verifyRes.message || 'Subscription confirmation failed');
+                            }
+                        } catch (err) {
+                            Toast.error(err.message || 'Subscription confirmation failed');
+                        } finally { Spinner.hide(); }
+                    });
+
+                    // Cancel
+                    document.getElementById('upiSubCancelBtn').addEventListener('click', () => {
+                        overlay.remove();
                         btn.innerHTML = '<i class="fas fa-bolt"></i> Subscribe';
                         btn.disabled = false;
+                        Toast.warning('Payment cancelled');
                     });
-                    rzp.open();
                 } catch (err) {
                     Toast.error(err.message);
                     btn.innerHTML = '<i class="fas fa-bolt"></i> Subscribe';

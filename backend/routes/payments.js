@@ -1,6 +1,6 @@
 /**
  * Payment Routes
- * Razorpay payment integration
+ * UPI QR Code payment flow
  */
 
 const express = require('express');

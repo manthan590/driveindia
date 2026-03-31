@@ -1,11 +1,12 @@
 /**
  * Subscription Controller
- * Handles plan subscriptions with Razorpay
+ * Handles plan subscriptions with UPI QR payment
  */
 
-const crypto = require('crypto');
 const pool = require('../config/database');
-const { getRazorpay } = require('../config/razorpay');
+
+const UPI_ID = 'mparab046@oksbi';
+const UPI_NAME = 'Manthan Parab';
 
 // Get all plans
 const getPlans = async (req, res) => {
@@ -25,7 +26,7 @@ const getPlans = async (req, res) => {
     }
 };
 
-// Create Razorpay order for subscription
+// Create order for subscription — return UPI details
 const createSubscriptionOrder = async (req, res) => {
     try {
         const userId = req.userId;
@@ -62,21 +63,17 @@ const createSubscriptionOrder = async (req, res) => {
                 return await activateFreePlan(userId, plan, res);
             }
 
-            // Create Razorpay order
-            const order = await getRazorpay().orders.create({
-                amount: Math.round(plan.price * 100),
-                currency: 'INR',
-                receipt: `sub_${plan_id}_${userId}`,
-                notes: { plan_id: String(plan_id), user_id: String(userId), plan_name: plan.name }
-            });
+            // Return UPI payment details
+            const refId = 'DISUB' + Date.now() + Math.floor(Math.random() * 1000);
 
             return res.json({
                 success: true,
                 data: {
-                    order_id: order.id,
-                    amount: order.amount,
-                    currency: order.currency,
-                    key_id: process.env.RAZORPAY_KEY_ID,
+                    upi_id: UPI_ID,
+                    upi_name: UPI_NAME,
+                    amount: plan.price,
+                    ref_id: refId,
+                    plan_id: plan.id,
                     plan_name: plan.name
                 }
             });
@@ -116,24 +113,14 @@ async function activateFreePlan(userId, plan, res) {
     }
 }
 
-// Verify Razorpay payment & activate subscription
+// Confirm UPI payment & activate subscription
 const verifySubscription = async (req, res) => {
     try {
         const userId = req.userId;
-        const { razorpay_order_id, razorpay_payment_id, razorpay_signature, plan_id } = req.body;
+        const { transaction_id, plan_id } = req.body;
 
-        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !plan_id) {
-            return res.status(400).json({ success: false, message: 'Missing payment verification data' });
-        }
-
-        // Verify signature
-        const expectedSignature = crypto
-            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-            .update(razorpay_order_id + '|' + razorpay_payment_id)
-            .digest('hex');
-
-        if (expectedSignature !== razorpay_signature) {
-            return res.status(400).json({ success: false, message: 'Payment verification failed — invalid signature' });
+        if (!transaction_id || !plan_id) {
+            return res.status(400).json({ success: false, message: 'Transaction ID and Plan ID are required' });
         }
 
         const connection = await pool.getConnection();
@@ -151,8 +138,8 @@ const verifySubscription = async (req, res) => {
 
             const [result] = await connection.query(
                 `INSERT INTO subscriptions (user_id, plan_id, plan_name, amount, start_date, end_date, payment_method, transaction_id, status)
-                 VALUES (?, ?, ?, ?, ?, ?, 'Razorpay', ?, 'active')`,
-                [userId, plan.id, plan.name, plan.price, startDate, endDate, razorpay_payment_id]
+                 VALUES (?, ?, ?, ?, ?, ?, 'UPI', ?, 'active')`,
+                [userId, plan.id, plan.name, plan.price, startDate, endDate, transaction_id]
             );
 
             connection.release();
@@ -166,7 +153,7 @@ const verifySubscription = async (req, res) => {
                     amount: plan.price,
                     start_date: startDate,
                     end_date: endDate,
-                    transaction_id: razorpay_payment_id,
+                    transaction_id: transaction_id,
                     status: 'active'
                 }
             });
@@ -176,7 +163,7 @@ const verifySubscription = async (req, res) => {
         }
     } catch (error) {
         console.error('Verify subscription error:', error);
-        res.status(500).json({ success: false, message: 'Subscription verification failed' });
+        res.status(500).json({ success: false, message: 'Subscription confirmation failed' });
     }
 };
 
