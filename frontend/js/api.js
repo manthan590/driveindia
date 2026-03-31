@@ -77,7 +77,9 @@ class ApiService {
         updateProfile: (data) => this.request('PUT', '/auth/profile', data),
         changePassword: (data) => this.request('PUT', '/auth/change-password', data),
         uploadPhoto: (formData) => this.requestFormData('POST', '/auth/upload-photo', formData),
-        verifyAadhaar: (aadhaar_number) => this.request('POST', '/auth/verify-aadhaar', { aadhaar_number })
+        verifyAadhaar: (aadhaar_number) => this.request('POST', '/auth/verify-aadhaar', { aadhaar_number }),
+        uploadDocument: (formData) => this.requestFormData('POST', '/auth/upload-document', formData),
+        submitKYC: () => this.request('POST', '/auth/submit-kyc')
     };
 
     // Subscription Endpoints
@@ -132,7 +134,12 @@ class ApiService {
         getAllBookings: (filters = {}) => {
             const params = new URLSearchParams(filters);
             return this.request('GET', `/admin/bookings?${params}`);
-        }
+        },
+        getKYCApplications: (status) => {
+            const params = status ? `?status=${status}` : '';
+            return this.request('GET', `/admin/kyc-applications${params}`);
+        },
+        updateKYCStatus: (userId, data) => this.request('PUT', `/admin/kyc/${userId}`, data)
     };
 
     // FormData request (for file uploads — no Content-Type header, browser sets multipart boundary)

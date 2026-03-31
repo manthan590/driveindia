@@ -65,6 +65,7 @@ class Application {
             { label: 'Dashboard', icon: 'chart-line', page: 'adminDashboard', onclick: () => { adminModule.loadDashboard(); this.showPage('adminDashboard'); } },
             { label: 'Manage Vehicles', icon: 'car', page: 'adminVehicles', onclick: () => { adminModule.loadVehicles(); this.showPage('adminVehicles'); } },
             { label: 'Manage Bookings', icon: 'clipboard-list', page: 'adminBookings', onclick: () => { adminModule.loadBookings(); this.showPage('adminBookings'); } },
+            { label: 'KYC Verification', icon: 'id-card', page: 'adminKYC', onclick: () => { adminModule.loadKYCApplications(); this.showPage('adminKYC'); } },
             { label: 'About Us', icon: 'info-circle', page: 'aboutPage', onclick: () => { this.showAboutPage(); } }
         ] : [
             { label: 'My Bookings', icon: 'calendar-check', page: 'userDashboard', onclick: () => { bookingModule.loadBookings(); this.showPage('userDashboard'); } },
@@ -654,6 +655,13 @@ class Application {
             const user = response.data;
             const photoUrl = user.profile_photo ? this.getImageUrl(user.profile_photo) : null;
 
+            const kycBadge = {
+                pending: { color: 'warning', icon: 'clock', text: 'KYC Pending' },
+                submitted: { color: 'info', icon: 'hourglass-half', text: 'KYC Under Review' },
+                verified: { color: 'success', icon: 'check-circle', text: 'KYC Verified' },
+                rejected: { color: 'error', icon: 'times-circle', text: 'KYC Rejected' }
+            }[user.kyc_status || 'pending'] || { color: 'warning', icon: 'clock', text: 'KYC Pending' };
+
             container.innerHTML = `
                 <div style="max-width: 800px; margin: 0 auto;">
                     <h2 style="font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; margin-bottom: 24px; color: var(--text-primary);"><span style="color: var(--syntax-green);">></span> profile</h2>
@@ -677,9 +685,8 @@ class Application {
                                 <p style="margin: 0 0 4px; color: var(--text-secondary); font-size: 0.88rem;">${user.email}</p>
                                 <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px;">
                                     <span class="badge badge-${user.role === 'admin' ? 'error' : 'primary'}" style="font-size: 0.72rem;">${user.role.toUpperCase()}</span>
-                                    <span class="badge badge-${user.verified ? 'success' : 'warning'}" style="font-size: 0.72rem;">
-                                        <i class="fas fa-${user.verified ? 'check-circle' : 'exclamation-circle'}"></i> 
-                                        ${user.verified ? 'Verified' : 'Unverified'}
+                                    <span class="badge badge-${kycBadge.color}" style="font-size: 0.72rem;">
+                                        <i class="fas fa-${kycBadge.icon}"></i> ${kycBadge.text}
                                     </span>
                                 </div>
                             </div>
@@ -688,10 +695,10 @@ class Application {
 
                     <!-- Edit Profile Form -->
                     <div class="card" style="padding: 28px; margin-bottom: 20px;">
-                        <h4 style="margin-top: 0; margin-bottom: 20px; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: var(--text-secondary);"><i class="fas fa-edit" style="color: var(--syntax-blue); margin-right: 8px;"></i>Edit Profile</h4>
+                        <h4 style="margin-top: 0; margin-bottom: 20px; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: var(--text-secondary);"><i class="fas fa-edit" style="color: var(--syntax-blue); margin-right: 8px;"></i>Personal Information</h4>
                         <form id="editProfileForm">
                             <div class="form-row">
-                                <div class="form-group" style="margin:0;"><label>FULL_NAME</label><input type="text" id="profName" value="${user.full_name}" required></div>
+                                <div class="form-group" style="margin:0;"><label>FULL_NAME (as per ID)</label><input type="text" id="profName" value="${user.full_name}" required></div>
                                 <div class="form-group" style="margin:0;"><label>PHONE</label><input type="tel" id="profPhone" value="${user.phone}" maxlength="10" required></div>
                             </div>
                             <div class="form-row">
@@ -701,35 +708,55 @@ class Application {
                                         ${['Mumbai','Delhi','Bangalore','Pune','Hyderabad','Chennai'].map(c => `<option value="${c}" ${user.city === c ? 'selected' : ''}>${c}</option>`).join('')}
                                     </select>
                                 </div>
-                                <div class="form-group" style="margin:0;"><label>DRIVING_LICENSE</label><input type="text" id="profLicense" value="${user.driving_license || ''}"></div>
+                                <div class="form-group" style="margin:0;"><label>PAN_NUMBER (optional)</label><input type="text" id="profPan" value="${user.pan_number || ''}" maxlength="10" placeholder="ABCDE1234F"></div>
                             </div>
-                            <div class="form-group"><label>ADDRESS</label><textarea id="profAddress" rows="2" style="resize: vertical;">${user.address || ''}</textarea></div>
+                            <div class="form-row">
+                                <div class="form-group" style="margin:0;"><label>DRIVING_LICENSE *</label><input type="text" id="profLicense" value="${user.driving_license || ''}" required></div>
+                                <div class="form-group" style="margin:0;"><label>AADHAAR_NUMBER *</label><input type="text" id="profAadhaar" value="${user.aadhaar_number || ''}" maxlength="12" placeholder="12-digit Aadhaar" required></div>
+                            </div>
+                            <div class="form-group"><label>CURRENT_ADDRESS *</label><textarea id="profAddress" rows="2" style="resize: vertical;" required>${user.address || ''}</textarea></div>
+                            <div class="form-group"><label>PERMANENT_ADDRESS</label><textarea id="profPermAddress" rows="2" style="resize: vertical;">${user.permanent_address || ''}</textarea></div>
+                            
+                            <h4 style="margin: 24px 0 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: var(--text-secondary);"><i class="fas fa-phone-alt" style="color: var(--syntax-orange); margin-right: 8px;"></i>Emergency Contact</h4>
+                            <div class="form-row">
+                                <div class="form-group" style="margin:0;"><label>CONTACT_NAME *</label><input type="text" id="profEmergName" value="${user.emergency_contact_name || ''}" placeholder="Full name"></div>
+                                <div class="form-group" style="margin:0;"><label>CONTACT_PHONE *</label><input type="tel" id="profEmergPhone" value="${user.emergency_contact_phone || ''}" maxlength="10" placeholder="10-digit number"></div>
+                            </div>
+                            
                             <button type="submit" class="btn btn-primary" style="font-family: 'JetBrains Mono', monospace;"><i class="fas fa-save"></i> Save Changes</button>
                         </form>
                     </div>
 
-                    <!-- Aadhaar Verification -->
+                    <!-- KYC Document Upload -->
                     <div class="card" style="padding: 28px; margin-bottom: 20px;">
-                        <h4 style="margin-top: 0; margin-bottom: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: var(--text-secondary);"><i class="fas fa-id-card" style="color: var(--syntax-cyan); margin-right: 8px;"></i>Aadhaar Verification</h4>
-                        ${user.verified 
-                            ? `<div style="display: flex; align-items: center; gap: 12px; padding: 16px; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.2); border-radius: 8px;">
+                        <h4 style="margin-top: 0; margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: var(--text-secondary);"><i class="fas fa-id-card" style="color: var(--syntax-cyan); margin-right: 8px;"></i>KYC Documents</h4>
+                        <p style="color: var(--text-tertiary); font-size: 0.8rem; margin-bottom: 20px;">Upload clear photos of your documents. All documents are required for verification.</p>
+                        
+                        ${user.kyc_status === 'rejected' && user.kyc_remarks ? `
+                            <div style="padding: 12px 16px; background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.3); border-radius: 8px; margin-bottom: 20px;">
+                                <p style="margin: 0; color: var(--syntax-red); font-size: 0.85rem;"><i class="fas fa-exclamation-triangle"></i> Rejected: ${user.kyc_remarks}</p>
+                            </div>
+                        ` : ''}
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            ${this.renderDocUploadCard('Selfie Photo', 'selfie_photo', user.selfie_photo, 'fa-camera', 'Take a clear selfie')}
+                            ${this.renderDocUploadCard('Driving License Photo', 'dl_photo', user.dl_photo, 'fa-id-card', 'Front side of your DL')}
+                            ${this.renderDocUploadCard('Aadhaar Card Photo', 'aadhaar_photo', user.aadhaar_photo, 'fa-address-card', 'Front side of Aadhaar')}
+                            ${this.renderDocUploadCard('Selfie with DL', 'id_with_selfie_photo', user.id_with_selfie_photo, 'fa-user-check', 'Hold your DL near your face')}
+                        </div>
+
+                        ${user.kyc_status !== 'verified' ? `
+                            <button id="submitKYCBtn" class="btn btn-primary w-full" style="margin-top: 20px; justify-content: center; font-family: 'JetBrains Mono', monospace;" 
+                                ${user.kyc_status === 'submitted' ? 'disabled style="margin-top:20px;justify-content:center;font-family:JetBrains Mono,monospace;opacity:0.6;pointer-events:none;"' : ''}>
+                                <i class="fas fa-${user.kyc_status === 'submitted' ? 'hourglass-half' : 'paper-plane'}"></i> 
+                                ${user.kyc_status === 'submitted' ? 'KYC Under Review' : 'Submit KYC for Verification'}
+                            </button>
+                        ` : `
+                            <div style="margin-top: 20px; padding: 16px; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.2); border-radius: 8px; text-align: center;">
                                 <i class="fas fa-check-circle" style="font-size: 1.5rem; color: var(--syntax-green);"></i>
-                                <div>
-                                    <p style="margin: 0; font-weight: 600; color: var(--syntax-green);">Aadhaar Verified</p>
-                                    <p style="margin: 4px 0 0; font-size: 0.82rem; color: var(--text-secondary);">XXXX-XXXX-${(user.aadhaar_number || '').slice(-4)}</p>
-                                </div>
-                              </div>`
-                            : `<div style="display: flex; gap: 12px; align-items: flex-end;">
-                                <div class="form-group" style="margin: 0; flex: 1;">
-                                    <label>AADHAAR_NUMBER</label>
-                                    <input type="text" id="aadhaarInput" placeholder="Enter 12-digit Aadhaar" maxlength="12" value="${user.aadhaar_number || ''}">
-                                </div>
-                                <button id="verifyAadhaarBtn" class="btn btn-primary" style="font-family: 'JetBrains Mono', monospace; white-space: nowrap; height: 42px;">
-                                    <i class="fas fa-fingerprint"></i> Verify
-                                </button>
-                              </div>
-                              <p style="margin: 8px 0 0; font-size: 0.78rem; color: var(--text-tertiary);">Verification connects to UIDAI. Your data is encrypted and secure.</p>`
-                        }
+                                <p style="margin: 8px 0 0; font-weight: 600; color: var(--syntax-green);">KYC Verified — You are approved to rent vehicles</p>
+                            </div>
+                        `}
                     </div>
 
                     <!-- Change Password -->
@@ -742,6 +769,32 @@ class Application {
                             </div>
                             <button type="submit" class="btn btn-outline" style="font-family: 'JetBrains Mono', monospace; margin-top: 8px;"><i class="fas fa-key"></i> Update Password</button>
                         </form>
+                    </div>
+
+                    <!-- Rental Policy -->
+                    <div class="card" style="padding: 28px; margin-bottom: 20px;">
+                        <h4 style="margin-top: 0; margin-bottom: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: var(--text-secondary);"><i class="fas fa-shield-alt" style="color: var(--syntax-purple); margin-right: 8px;"></i>Rental Policy & Terms</h4>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.8;">
+                            <div style="margin-bottom: 16px;">
+                                <p style="color: var(--syntax-blue); font-weight: 600; margin-bottom: 4px;"><i class="fas fa-rupee-sign"></i> Security Deposit</p>
+                                <p style="margin: 0;">A refundable security deposit of <strong style="color: var(--text-primary);">₹2,000 (Bikes/Scooters)</strong> or <strong style="color: var(--text-primary);">₹5,000 (Cars)</strong> is required at pickup. Deposit is refunded on safe return of the vehicle.</p>
+                            </div>
+                            <div style="margin-bottom: 16px;">
+                                <p style="color: var(--syntax-orange); font-weight: 600; margin-bottom: 4px;"><i class="fas fa-clock"></i> Late Return Policy</p>
+                                <p style="margin: 0;"><strong style="color: var(--text-primary);">Step 1:</strong> SMS & email reminder sent 24 hours before due date.<br>
+                                <strong style="color: var(--text-primary);">Step 2:</strong> Late fee of <strong>₹500/day</strong> applied automatically after due date.<br>
+                                <strong style="color: var(--text-primary);">Step 3:</strong> We will contact you and your emergency contact.<br>
+                                <strong style="color: var(--syntax-red);">Step 4:</strong> If vehicle is not returned within 48 hours, your ID proof and address will be used to file a police complaint for vehicle theft / breach of contract.</p>
+                            </div>
+                            <div style="margin-bottom: 16px;">
+                                <p style="color: var(--syntax-green); font-weight: 600; margin-bottom: 4px;"><i class="fas fa-file-contract"></i> KYC Requirement</p>
+                                <p style="margin: 0;">Valid Driving License, Aadhaar Card, and a live selfie are <strong style="color: var(--text-primary);">mandatory</strong> before booking. Your identity is verified to protect both you and the vehicle owner.</p>
+                            </div>
+                            <div>
+                                <p style="color: var(--syntax-red); font-weight: 600; margin-bottom: 4px;"><i class="fas fa-ban"></i> Cancellation</p>
+                                <p style="margin: 0;">Free cancellation up to 24 hours before pickup. Cancellation within 24 hours attracts a <strong style="color: var(--text-primary);">10%</strong> cancellation fee.</p>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Pickup Locations Map -->
@@ -757,6 +810,21 @@ class Application {
         } catch (error) {
             container.innerHTML = `<div class="card" style="padding: 40px; text-align: center;"><p style="color: var(--syntax-red);">Failed to load profile: ${error.message}</p></div>`;
         }
+    }
+
+    renderDocUploadCard(label, docType, currentUrl, icon, hint) {
+        const uploaded = !!currentUrl;
+        return `
+            <div class="card" style="padding: 16px; text-align: center; border: 1px dashed ${uploaded ? 'var(--syntax-green)' : 'var(--border-color)'}; background: ${uploaded ? 'rgba(74,222,128,0.04)' : 'transparent'};">
+                <i class="fas ${uploaded ? 'fa-check-circle' : icon}" style="font-size: 1.5rem; color: ${uploaded ? 'var(--syntax-green)' : 'var(--text-tertiary)'}; margin-bottom: 8px;"></i>
+                <p style="margin: 0 0 4px; font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">${label}</p>
+                <p style="margin: 0 0 10px; font-size: 0.75rem; color: var(--text-tertiary);">${uploaded ? 'Uploaded ✓' : hint}</p>
+                <label class="btn btn-outline" style="font-size: 0.75rem; padding: 5px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-upload"></i> ${uploaded ? 'Re-upload' : 'Upload'}
+                    <input type="file" accept="image/*" class="kyc-doc-input" data-doc-type="${docType}" style="display: none;">
+                </label>
+            </div>
+        `;
     }
 
     attachProfileListeners(user) {
@@ -777,6 +845,40 @@ class Application {
             } catch (err) { Toast.error(err.message); } finally { Spinner.hide(); }
         });
 
+        // KYC document uploads
+        document.querySelectorAll('.kyc-doc-input').forEach(input => {
+            input.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const docType = e.target.dataset.docType;
+                const formData = new FormData();
+                formData.append('document', file);
+                formData.append('doc_type', docType);
+                try {
+                    Spinner.show();
+                    const res = await api.auth.uploadDocument(formData);
+                    if (res.success) {
+                        Toast.success('Document uploaded!');
+                        this.showProfilePage(); // Refresh
+                    }
+                } catch (err) { Toast.error(err.message); } finally { Spinner.hide(); }
+            });
+        });
+
+        // Submit KYC
+        document.getElementById('submitKYCBtn')?.addEventListener('click', async () => {
+            try {
+                Spinner.show();
+                const res = await api.auth.submitKYC();
+                if (res.success) {
+                    Toast.success(res.message);
+                    this.showProfilePage();
+                } else {
+                    Toast.error(res.message);
+                }
+            } catch (err) { Toast.error(err.message); } finally { Spinner.hide(); }
+        });
+
         // Edit profile form
         document.getElementById('editProfileForm')?.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -787,36 +889,18 @@ class Application {
                     phone: document.getElementById('profPhone').value,
                     city: document.getElementById('profCity').value,
                     driving_license: document.getElementById('profLicense').value,
-                    address: document.getElementById('profAddress').value
+                    pan_number: document.getElementById('profPan').value,
+                    aadhaar_number: document.getElementById('profAadhaar').value,
+                    address: document.getElementById('profAddress').value,
+                    permanent_address: document.getElementById('profPermAddress').value,
+                    emergency_contact_name: document.getElementById('profEmergName').value,
+                    emergency_contact_phone: document.getElementById('profEmergPhone').value
                 });
                 Toast.success('Profile updated!');
-                // Update navbar name
                 document.getElementById('userNameDisplay').textContent = document.getElementById('profName').value;
-                // Update session storage
                 const session = storageUtils.getUserSession();
                 session.full_name = document.getElementById('profName').value;
                 storageUtils.setUserSession(session);
-            } catch (err) { Toast.error(err.message); } finally { Spinner.hide(); }
-        });
-
-        // Aadhaar verify
-        document.getElementById('verifyAadhaarBtn')?.addEventListener('click', async () => {
-            const aadhaar = document.getElementById('aadhaarInput').value.trim();
-            if (!/^\d{12}$/.test(aadhaar)) { Toast.error('Enter a valid 12-digit Aadhaar number'); return; }
-            try {
-                Spinner.show();
-                const btn = document.getElementById('verifyAadhaarBtn');
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
-                btn.disabled = true;
-                const res = await api.auth.verifyAadhaar(aadhaar);
-                if (res.success) {
-                    Toast.success('Aadhaar verified successfully!');
-                    this.showProfilePage(); // Refresh to show verified state
-                } else {
-                    Toast.error(res.message || 'Verification failed');
-                    btn.innerHTML = '<i class="fas fa-fingerprint"></i> Verify';
-                    btn.disabled = false;
-                }
             } catch (err) { Toast.error(err.message); } finally { Spinner.hide(); }
         });
 

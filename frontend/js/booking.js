@@ -69,6 +69,7 @@ class BookingModule {
         const totalAmount = formatUtils.formatCurrency(booking.total_amount);
         const basePrice = formatUtils.formatCurrency(booking.base_price);
         const gstAmount = formatUtils.formatCurrency(booking.gst_amount);
+        const securityDeposit = formatUtils.formatCurrency(booking.security_deposit || 0);
         const startDate = formatUtils.formatDate(booking.start_date);
         const endDate = formatUtils.formatDate(booking.end_date);
 
@@ -151,10 +152,22 @@ class BookingModule {
                                     <span>GST (18%):</span>
                                     <span style="font-weight: 600;">${gstAmount}</span>
                                 </div>
+                                ${booking.security_deposit ? `
+                                <div style="display: flex; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--border-color);">
+                                    <span>Security Deposit (refundable):</span>
+                                    <span style="font-weight: 600; color: var(--syntax-orange);">${securityDeposit}</span>
+                                </div>
+                                ` : ''}
                                 <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 1.1rem; padding-top: 12px; border-top: 2px solid var(--border-color); color: var(--primary);">
                                     <span>Total Amount:</span>
                                     <span>${totalAmount}</span>
                                 </div>
+                                ${booking.security_deposit ? `
+                                <div style="display: flex; justify-content: space-between; padding-top: 8px; font-size: 0.85rem;">
+                                    <span style="color: var(--text-tertiary);">Deposit Status:</span>
+                                    <span class="badge badge-${booking.deposit_status === 'refunded' ? 'success' : booking.deposit_status === 'forfeited' ? 'danger' : 'warning'}">${(booking.deposit_status || 'pending').toUpperCase()}</span>
+                                </div>
+                                ` : ''}
                             </div>
                         </div>
                     </div>

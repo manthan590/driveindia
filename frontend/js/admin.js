@@ -316,6 +316,158 @@ class AdminModule {
         };
         return classes[status] || 'badge-secondary';
     }
+
+    // ---- KYC Verification Panel ----
+
+    async loadKYCApplications() {
+        try {
+            Spinner.show();
+            const response = await api.admin.getKYCApplications();
+            this.kycApplications = response.data || [];
+            this.renderKYCPanel();
+            Spinner.hide();
+        } catch (error) {
+            Toast.error('Failed to load KYC applications');
+            Spinner.hide();
+        }
+    }
+
+    renderKYCPanel() {
+        const adminKYC = document.getElementById('adminKYC');
+        if (!adminKYC) return;
+
+        const submitted = this.kycApplications.filter(u => u.kyc_status === 'submitted');
+        const verified = this.kycApplications.filter(u => u.kyc_status === 'verified');
+        const rejected = this.kycApplications.filter(u => u.kyc_status === 'rejected');
+
+        const renderUserCard = (user) => {
+            const badgeClass = { submitted: 'badge-warning', verified: 'badge-success', rejected: 'badge-danger' }[user.kyc_status] || 'badge-secondary';
+            const baseUrl = window.location.origin;
+            return `
+                <div class="card" style="padding: 20px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+                        <div style="width: 60px; height: 60px; border-radius: 50%; background: var(--bg-tertiary); overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                            ${user.profile_photo 
+                                ? `<img src="${baseUrl}${user.profile_photo}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-user\\' style=\\'font-size:1.5rem;color:var(--text-tertiary)\\'></i>'">`
+                                : `<i class="fas fa-user" style="font-size: 1.5rem; color: var(--text-tertiary);"></i>`}
+                        </div>
+                        <div style="flex: 1; min-width: 200px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                                <h4 style="margin: 0; font-size: 1rem;">${user.full_name}</h4>
+                                <span class="badge ${badgeClass}" style="font-size: 0.72rem;">${user.kyc_status.toUpperCase()}</span>
+                            </div>
+                            <p style="margin: 4px 0 0; color: var(--text-secondary); font-size: 0.82rem;">${user.email} &bull; ${user.phone}</p>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; margin-top: 12px; font-size: 0.82rem;">
+                                <div><span style="color: var(--text-tertiary);">DL:</span> <strong>${user.driving_license || '—'}</strong></div>
+                                <div><span style="color: var(--text-tertiary);">Aadhaar:</span> <strong>${user.aadhaar_number ? 'XXXX-XXXX-' + user.aadhaar_number.slice(-4) : '—'}</strong></div>
+                                <div><span style="color: var(--text-tertiary);">PAN:</span> <strong>${user.pan_number || '—'}</strong></div>
+                                <div><span style="color: var(--text-tertiary);">Emergency:</span> <strong>${user.emergency_contact_name || '—'} (${user.emergency_contact_phone || '—'})</strong></div>
+                            </div>
+                            <div style="margin-top: 8px; font-size: 0.82rem;">
+                                <span style="color: var(--text-tertiary);">Address:</span> <span>${user.address || '—'}</span>
+                            </div>
+
+                            <!-- Document Photos -->
+                            <div style="display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap;">
+                                ${['selfie_photo', 'dl_photo', 'aadhaar_photo', 'id_with_selfie_photo'].map(field => {
+                                    const label = { selfie_photo: 'Selfie', dl_photo: 'DL Photo', aadhaar_photo: 'Aadhaar', id_with_selfie_photo: 'ID + Selfie' }[field];
+                                    if (user[field]) {
+                                        return `<a href="${baseUrl}${user[field]}" target="_blank" style="text-decoration:none;">
+                                            <div style="width:70px;height:70px;border-radius:8px;overflow:hidden;border:2px solid var(--syntax-green);position:relative;">
+                                                <img src="${baseUrl}${user[field]}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-file-image\\' style=\\'font-size:1.5rem;color:var(--text-tertiary);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)\\'></i>'">
+                                                <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.7);padding:2px;text-align:center;font-size:0.6rem;color:#fff;">${label}</div>
+                                            </div>
+                                        </a>`;
+                                    }
+                                    return `<div style="width:70px;height:70px;border-radius:8px;border:2px dashed var(--border-color);display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                                        <i class="fas fa-times" style="color:var(--syntax-red);font-size:0.8rem;"></i>
+                                        <span style="font-size:0.55rem;color:var(--text-tertiary);margin-top:4px;">${label}</span>
+                                    </div>`;
+                                }).join('')}
+                            </div>
+
+                            ${user.kyc_remarks ? `<p style="margin: 8px 0 0; font-size: 0.8rem; color: var(--syntax-orange);"><i class="fas fa-comment"></i> ${user.kyc_remarks}</p>` : ''}
+
+                            ${user.kyc_status === 'submitted' ? `
+                                <div style="display: flex; gap: 8px; margin-top: 14px; align-items: center; flex-wrap: wrap;">
+                                    <button class="btn btn-primary btn-small kyc-approve" data-user-id="${user.id}" style="font-size: 0.8rem;">
+                                        <i class="fas fa-check"></i> Approve
+                                    </button>
+                                    <button class="btn btn-danger btn-small kyc-reject" data-user-id="${user.id}" style="font-size: 0.8rem;">
+                                        <i class="fas fa-times"></i> Reject
+                                    </button>
+                                    <input type="text" class="kyc-remarks-input" data-user-id="${user.id}" placeholder="Remarks (optional for approve, required for reject)" style="flex:1;min-width:180px;padding:6px 10px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-tertiary);color:var(--text-primary);font-size:0.8rem;">
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+
+        adminKYC.innerHTML = `
+            <div style="animation: fadeIn 0.3s ease-in-out;">
+                <h2 style="margin-bottom: 24px;"><i class="fas fa-id-card"></i> KYC Verification</h2>
+
+                ${submitted.length > 0 ? `
+                    <h4 style="color: var(--syntax-orange); margin-bottom: 12px;"><i class="fas fa-hourglass-half"></i> Pending Review (${submitted.length})</h4>
+                    ${submitted.map(renderUserCard).join('')}
+                ` : `
+                    <div class="card" style="padding: 24px; text-align: center; margin-bottom: 24px;">
+                        <p style="color: var(--text-secondary); margin: 0;"><i class="fas fa-check"></i> No pending KYC applications</p>
+                    </div>
+                `}
+
+                ${verified.length > 0 ? `
+                    <h4 style="color: var(--syntax-green); margin: 24px 0 12px;"><i class="fas fa-check-circle"></i> Verified (${verified.length})</h4>
+                    ${verified.map(renderUserCard).join('')}
+                ` : ''}
+
+                ${rejected.length > 0 ? `
+                    <h4 style="color: var(--syntax-red); margin: 24px 0 12px;"><i class="fas fa-times-circle"></i> Rejected (${rejected.length})</h4>
+                    ${rejected.map(renderUserCard).join('')}
+                ` : ''}
+            </div>
+        `;
+
+        this.attachKYCListeners();
+    }
+
+    attachKYCListeners() {
+        document.querySelectorAll('.kyc-approve').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const userId = btn.dataset.userId;
+                const remarks = document.querySelector(`.kyc-remarks-input[data-user-id="${userId}"]`)?.value || '';
+                try {
+                    Spinner.show();
+                    const res = await api.admin.updateKYCStatus(userId, { status: 'verified', remarks });
+                    if (res.success) {
+                        Toast.success('KYC approved!');
+                        this.loadKYCApplications();
+                    }
+                } catch (err) { Toast.error(err.message); } finally { Spinner.hide(); }
+            });
+        });
+
+        document.querySelectorAll('.kyc-reject').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const userId = btn.dataset.userId;
+                const remarks = document.querySelector(`.kyc-remarks-input[data-user-id="${userId}"]`)?.value || '';
+                if (!remarks.trim()) {
+                    Toast.warning('Please provide a reason for rejection');
+                    return;
+                }
+                try {
+                    Spinner.show();
+                    const res = await api.admin.updateKYCStatus(userId, { status: 'rejected', remarks });
+                    if (res.success) {
+                        Toast.success('KYC rejected');
+                        this.loadKYCApplications();
+                    }
+                } catch (err) { Toast.error(err.message); } finally { Spinner.hide(); }
+            });
+        });
+    }
 }
 
 // Global admin module instance

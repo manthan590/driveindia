@@ -49,6 +49,19 @@ const createBooking = async (req, res) => {
         const connection = await pool.getConnection();
 
         try {
+            // Check KYC status
+            const [userRows] = await connection.query(
+                'SELECT kyc_status FROM users WHERE id = ?',
+                [userId]
+            );
+            if (userRows.length === 0 || userRows[0].kyc_status !== 'verified') {
+                connection.release();
+                return res.status(403).json({
+                    success: false,
+                    message: 'KYC verification is required before booking. Please complete your KYC from your Profile page.'
+                });
+            }
+
             // Check vehicle availability
             const [vehicle] = await connection.query(
                 'SELECT * FROM vehicles WHERE id = ?',
@@ -84,12 +97,15 @@ const createBooking = async (req, res) => {
             const gstAmount = Math.round(basePrice * GST_RATE * 100) / 100;
             const totalAmount = basePrice + gstAmount;
 
+            // Security deposit: ₹2000 for Bike/Scooter, ₹5000 for Car
+            const securityDeposit = vehicle[0].type === 'Car' ? 5000 : 2000;
+
             // Create booking
             const [result] = await connection.query(
                 `INSERT INTO bookings 
                 (user_id, vehicle_id, start_date, end_date, total_days, base_price, gst_amount, total_amount, 
-                 pickup_location, dropoff_location, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')`,
+                 pickup_location, dropoff_location, security_deposit, deposit_status, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'Pending')`,
                 [
                     userId,
                     vehicle_id,
@@ -100,7 +116,8 @@ const createBooking = async (req, res) => {
                     gstAmount,
                     totalAmount,
                     pickup_location || vehicle[0].location,
-                    dropoff_location || vehicle[0].location
+                    dropoff_location || vehicle[0].location,
+                    securityDeposit
                 ]
             );
 
@@ -117,6 +134,7 @@ const createBooking = async (req, res) => {
                     basePrice,
                     gstAmount,
                     totalAmount,
+                    securityDeposit,
                     status: 'Pending'
                 }
             });

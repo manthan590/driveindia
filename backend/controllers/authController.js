@@ -196,7 +196,10 @@ const getUserProfile = async (req, res) => {
         try {
             const [users] = await connection.query(
                 `SELECT id, full_name, email, phone, aadhaar_number, 
-                        driving_license, address, city, role, verified, profile_photo, created_at 
+                        driving_license, pan_number, address, permanent_address, city, 
+                        emergency_contact_name, emergency_contact_phone,
+                        role, verified, profile_photo, selfie_photo, dl_photo, 
+                        aadhaar_photo, id_with_selfie_photo, kyc_status, kyc_remarks, created_at 
                  FROM users WHERE id = ?`,
                 [userId]
             );
@@ -232,13 +235,15 @@ const getUserProfile = async (req, res) => {
 const updateProfile = async (req, res) => {
     try {
         const userId = req.userId;
-        const { full_name, phone, city, address, driving_license } = req.body;
+        const { full_name, phone, city, address, permanent_address, driving_license, pan_number, emergency_contact_name, emergency_contact_phone } = req.body;
 
         const connection = await pool.getConnection();
         try {
             await connection.query(
-                `UPDATE users SET full_name = ?, phone = ?, city = ?, address = ?, driving_license = ? WHERE id = ?`,
-                [full_name, phone, city, address, driving_license, userId]
+                `UPDATE users SET full_name = ?, phone = ?, city = ?, address = ?, permanent_address = ?, 
+                 driving_license = ?, pan_number = ?, emergency_contact_name = ?, emergency_contact_phone = ? WHERE id = ?`,
+                [full_name, phone, city, address, permanent_address || null, driving_license, pan_number || null, 
+                 emergency_contact_name || null, emergency_contact_phone || null, userId]
             );
             connection.release();
 
@@ -356,6 +361,81 @@ const verifyAadhaar = async (req, res) => {
     }
 };
 
+// Upload KYC Document
+const uploadDocument = async (req, res) => {
+    try {
+        const userId = req.userId;
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'No file uploaded' });
+        }
+
+        const { doc_type } = req.body;
+        const validTypes = ['selfie_photo', 'dl_photo', 'aadhaar_photo', 'id_with_selfie_photo'];
+        if (!validTypes.includes(doc_type)) {
+            return res.status(400).json({ success: false, message: 'Invalid document type' });
+        }
+
+        const docUrl = `/uploads/documents/${req.file.filename}`;
+        const connection = await pool.getConnection();
+        try {
+            await connection.query(`UPDATE users SET ${doc_type} = ? WHERE id = ?`, [docUrl, userId]);
+            connection.release();
+            return res.json({ success: true, message: 'Document uploaded', data: { doc_type, doc_url: docUrl } });
+        } catch (error) {
+            connection.release();
+            throw error;
+        }
+    } catch (error) {
+        console.error('Upload document error:', error);
+        res.status(500).json({ success: false, message: 'Failed to upload document' });
+    }
+};
+
+// Submit KYC for verification
+const submitKYC = async (req, res) => {
+    try {
+        const userId = req.userId;
+        const connection = await pool.getConnection();
+        try {
+            const [users] = await connection.query(
+                'SELECT driving_license, aadhaar_number, dl_photo, selfie_photo, address, emergency_contact_phone FROM users WHERE id = ?',
+                [userId]
+            );
+            if (users.length === 0) {
+                connection.release();
+                return res.status(404).json({ success: false, message: 'User not found' });
+            }
+            const u = users[0];
+            if (!u.driving_license || !u.aadhaar_number) {
+                connection.release();
+                return res.status(400).json({ success: false, message: 'Driving license and Aadhaar number are required' });
+            }
+            if (!u.dl_photo || !u.selfie_photo) {
+                connection.release();
+                return res.status(400).json({ success: false, message: 'Please upload your selfie and driving license photo' });
+            }
+            if (!u.address) {
+                connection.release();
+                return res.status(400).json({ success: false, message: 'Please fill in your address' });
+            }
+            if (!u.emergency_contact_phone) {
+                connection.release();
+                return res.status(400).json({ success: false, message: 'Emergency contact is required' });
+            }
+
+            await connection.query("UPDATE users SET kyc_status = 'submitted' WHERE id = ?", [userId]);
+            connection.release();
+            return res.json({ success: true, message: 'KYC submitted for verification! You will be notified once approved.' });
+        } catch (error) {
+            connection.release();
+            throw error;
+        }
+    } catch (error) {
+        console.error('Submit KYC error:', error);
+        res.status(500).json({ success: false, message: 'Failed to submit KYC' });
+    }
+};
+
 module.exports = {
     register,
     login,
@@ -363,5 +443,7 @@ module.exports = {
     updateProfile,
     changePassword,
     uploadPhoto,
-    verifyAadhaar
+    verifyAadhaar,
+    uploadDocument,
+    submitKYC
 };

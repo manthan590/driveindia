@@ -115,6 +115,34 @@ async function ensureSchema() {
             ALTER TABLE plans ADD UNIQUE INDEX uq_plans_name (name)
         `).catch(() => {}); // ignore if already exists
 
+        // Add new KYC columns to existing users table
+        const kycColumns = [
+            "ADD COLUMN pan_number VARCHAR(10) DEFAULT NULL",
+            "ADD COLUMN permanent_address TEXT DEFAULT NULL",
+            "ADD COLUMN emergency_contact_name VARCHAR(100) DEFAULT NULL",
+            "ADD COLUMN emergency_contact_phone VARCHAR(15) DEFAULT NULL",
+            "ADD COLUMN selfie_photo VARCHAR(255) DEFAULT NULL",
+            "ADD COLUMN dl_photo VARCHAR(255) DEFAULT NULL",
+            "ADD COLUMN aadhaar_photo VARCHAR(255) DEFAULT NULL",
+            "ADD COLUMN id_with_selfie_photo VARCHAR(255) DEFAULT NULL",
+            "ADD COLUMN kyc_status ENUM('pending','submitted','verified','rejected') DEFAULT 'pending'",
+            "ADD COLUMN kyc_remarks TEXT DEFAULT NULL"
+        ];
+        for (const col of kycColumns) {
+            await pool.query(`ALTER TABLE users ${col}`).catch(() => {});
+        }
+
+        // Add new booking columns
+        const bookingColumns = [
+            "ADD COLUMN security_deposit DECIMAL(10,2) NOT NULL DEFAULT 0",
+            "ADD COLUMN deposit_status ENUM('pending','paid','refunded','forfeited') DEFAULT 'pending'",
+            "ADD COLUMN late_fee DECIMAL(10,2) DEFAULT 0",
+            "ADD COLUMN return_date DATE DEFAULT NULL"
+        ];
+        for (const col of bookingColumns) {
+            await pool.query(`ALTER TABLE bookings ${col}`).catch(() => {});
+        }
+
         // Tables exist — still run seed statements so image_url / data fixes are applied
         const seedStatements = statements.filter(s =>
             s.toUpperCase().startsWith('INSERT') || s.toUpperCase().startsWith('UPDATE')

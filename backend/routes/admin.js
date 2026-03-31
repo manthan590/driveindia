@@ -16,5 +16,7 @@ router.post('/vehicles', verifyAdmin, upload.single('image'), adminController.ad
 router.put('/vehicles/:vehicleId', verifyAdmin, upload.single('image'), adminController.editVehicle);
 router.delete('/vehicles/:vehicleId', verifyAdmin, adminController.deleteVehicle);
 router.get('/bookings', verifyAdmin, adminController.getAllBookings);
+router.get('/kyc-applications', verifyAdmin, adminController.getKYCApplications);
+router.put('/kyc/:userId', verifyAdmin, adminController.updateKYCStatus);
 
 module.exports = router;

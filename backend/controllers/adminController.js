@@ -338,11 +338,74 @@ const getAllVehicles = async (req, res) => {
     }
 };
 
+// Get KYC Applications (Admin)
+const getKYCApplications = async (req, res) => {
+    try {
+        const { status } = req.query;
+        let query = `SELECT id, full_name, email, phone, aadhaar_number, driving_license, pan_number,
+                     address, permanent_address, city, emergency_contact_name, emergency_contact_phone,
+                     profile_photo, selfie_photo, dl_photo, aadhaar_photo, id_with_selfie_photo,
+                     kyc_status, kyc_remarks, verified, created_at
+                     FROM users WHERE role = 'user'`;
+        const params = [];
+        if (status) {
+            query += ' AND kyc_status = ?';
+            params.push(status);
+        } else {
+            query += " AND kyc_status IN ('submitted', 'verified', 'rejected')";
+        }
+        query += ' ORDER BY FIELD(kyc_status, "submitted", "rejected", "verified"), updated_at DESC';
+
+        const connection = await pool.getConnection();
+        try {
+            const [users] = await connection.query(query, params);
+            connection.release();
+            return res.json({ success: true, data: users });
+        } catch (error) {
+            connection.release();
+            throw error;
+        }
+    } catch (error) {
+        console.error('Get KYC applications error:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch KYC applications' });
+    }
+};
+
+// Approve / Reject KYC (Admin)
+const updateKYCStatus = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { status, remarks } = req.body;
+
+        if (!['verified', 'rejected'].includes(status)) {
+            return res.status(400).json({ success: false, message: 'Status must be verified or rejected' });
+        }
+
+        const connection = await pool.getConnection();
+        try {
+            await connection.query(
+                'UPDATE users SET kyc_status = ?, kyc_remarks = ?, verified = ? WHERE id = ?',
+                [status, remarks || null, status === 'verified', userId]
+            );
+            connection.release();
+            return res.json({ success: true, message: `KYC ${status} successfully` });
+        } catch (error) {
+            connection.release();
+            throw error;
+        }
+    } catch (error) {
+        console.error('Update KYC status error:', error);
+        res.status(500).json({ success: false, message: 'Failed to update KYC status' });
+    }
+};
+
 module.exports = {
     getDashboardStats,
     addVehicle,
     editVehicle,
     deleteVehicle,
     getAllBookings,
-    getAllVehicles
+    getAllVehicles,
+    getKYCApplications,
+    updateKYCStatus
 };

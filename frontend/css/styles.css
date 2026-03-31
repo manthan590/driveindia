@@ -836,3 +836,9 @@ p { color: var(--text-secondary); }
         font-size: 0.8rem;
     }
 }
+
+/* KYC Form Responsive */
+@media (max-width: 600px) {
+    .form-row { flex-direction: column; gap: 12px; }
+}
+
