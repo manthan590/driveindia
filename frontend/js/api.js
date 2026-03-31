@@ -51,8 +51,8 @@ class ApiService {
             const result = await response.json();
 
             if (!response.ok) {
-                // Auto-logout on expired/invalid token
-                if ((response.status === 401 || response.status === 403) && includeAuth) {
+                // Auto-logout only on 401 (unauthorized/expired token)
+                if (response.status === 401 && includeAuth) {
                     this.removeToken();
                     localStorage.removeItem('user');
                     window.location.reload();
