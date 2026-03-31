@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS payments (
 -- Plans Table
 CREATE TABLE IF NOT EXISTS plans (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(100) NOT NULL,
+    name VARCHAR(100) NOT NULL UNIQUE,
     duration_type ENUM('daily', 'weekly', 'monthly') NOT NULL,
     duration_days INT NOT NULL,
     price DECIMAL(10, 2) NOT NULL DEFAULT 0,

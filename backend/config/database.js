@@ -103,6 +103,18 @@ async function ensureSchema() {
         }
         console.log('✓ Database schema initialized successfully');
     } else {
+        // Clean up duplicate plans (from previous boots without UNIQUE constraint)
+        await pool.query(`
+            DELETE p1 FROM plans p1
+            INNER JOIN plans p2
+            WHERE p1.id > p2.id AND p1.name = p2.name
+        `).catch(() => {});
+
+        // Ensure UNIQUE constraint exists on plans.name
+        await pool.query(`
+            ALTER TABLE plans ADD UNIQUE INDEX uq_plans_name (name)
+        `).catch(() => {}); // ignore if already exists
+
         // Tables exist — still run seed statements so image_url / data fixes are applied
         const seedStatements = statements.filter(s =>
             s.toUpperCase().startsWith('INSERT') || s.toUpperCase().startsWith('UPDATE')
