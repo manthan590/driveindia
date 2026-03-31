@@ -41,6 +41,23 @@ const getDashboardStats = async (req, res) => {
                 "SELECT COUNT(*) as count FROM bookings WHERE status = 'Pending'"
             );
 
+            // Active subscriptions
+            const [activeSubscriptions] = await connection.query(
+                "SELECT COUNT(*) as count FROM subscriptions WHERE status = 'active' AND end_date > NOW()"
+            );
+
+            // Total subscription revenue
+            const [subscriptionRevenue] = await connection.query(
+                "SELECT SUM(amount) as total FROM subscriptions WHERE status = 'active'"
+            );
+
+            // Recent subscriptions (last 10)
+            const [recentSubscriptions] = await connection.query(
+                `SELECT s.*, u.full_name, u.email 
+                 FROM subscriptions s JOIN users u ON s.user_id = u.id 
+                 ORDER BY s.created_at DESC LIMIT 10`
+            );
+
             connection.release();
 
             return res.status(200).json({
@@ -51,7 +68,10 @@ const getDashboardStats = async (req, res) => {
                     totalVehicles: vehicleCount[0].count,
                     totalRevenue: revenue[0].total || 0,
                     completedBookings: completedBookings[0].count,
-                    pendingBookings: pendingBookings[0].count
+                    pendingBookings: pendingBookings[0].count,
+                    activeSubscriptions: activeSubscriptions[0].count,
+                    subscriptionRevenue: subscriptionRevenue[0].total || 0,
+                    recentSubscriptions: recentSubscriptions
                 }
             });
         } catch (error) {

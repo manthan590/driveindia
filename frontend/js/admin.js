@@ -94,15 +94,50 @@ class AdminModule {
 
                     <div class="card">
                         <div class="card-header">
-                            <h5 style="margin: 0;">Active Vehicles</h5>
-                            <span class="badge badge-info">${this.stats.totalVehicles}</span>
+                            <h5 style="margin: 0;">Active Subscriptions</h5>
+                            <span class="badge badge-info">${this.stats.activeSubscriptions || 0}</span>
                         </div>
-                        <p style="margin: 12px 0 0 0; color: var(--text-secondary);">Fleet management</p>
+                        <p style="margin: 12px 0 0 0; color: var(--text-secondary);">Plan revenue: ${formatUtils.formatCurrency(this.stats.subscriptionRevenue || 0)}</p>
                     </div>
                 </div>
 
+                <!-- Recent Subscriptions -->
+                ${this.stats.recentSubscriptions && this.stats.recentSubscriptions.length > 0 ? `
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <h5 style="margin: 0;"><i class="fas fa-crown" style="color: var(--syntax-yellow);"></i> Recent Plan Purchases</h5>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: var(--bg-secondary);">
+                                    <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid var(--border-color); font-size: 0.82rem;">User</th>
+                                    <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid var(--border-color); font-size: 0.82rem;">Plan</th>
+                                    <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid var(--border-color); font-size: 0.82rem;">Amount</th>
+                                    <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid var(--border-color); font-size: 0.82rem;">Txn ID</th>
+                                    <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid var(--border-color); font-size: 0.82rem;">Status</th>
+                                    <th style="padding: 10px 12px; text-align: left; border-bottom: 2px solid var(--border-color); font-size: 0.82rem;">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${this.stats.recentSubscriptions.map(s => `
+                                    <tr>
+                                        <td style="padding: 10px 12px; font-size: 0.85rem;"><strong>${s.full_name}</strong><br><span style="color: var(--text-tertiary); font-size: 0.75rem;">${s.email}</span></td>
+                                        <td style="padding: 10px 12px; font-size: 0.85rem;">${s.plan_name}</td>
+                                        <td style="padding: 10px 12px; font-size: 0.85rem;">${formatUtils.formatCurrency(s.amount)}</td>
+                                        <td style="padding: 10px 12px; font-size: 0.85rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;">${s.transaction_id || '—'}</td>
+                                        <td style="padding: 10px 12px;"><span class="badge badge-${s.status === 'active' ? 'success' : s.status === 'expired' ? 'warning' : 'danger'}">${s.status}</span></td>
+                                        <td style="padding: 10px 12px; font-size: 0.85rem;">${formatUtils.formatDate(s.created_at)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                ` : ''}
+
                 <!-- Quick Actions -->
-                <div style="display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap;">
+                <div style="display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap;">
                     <button class="btn btn-primary" id="addVehicleBtn">
                         <i class="fas fa-plus"></i> Add Vehicle
                     </button>

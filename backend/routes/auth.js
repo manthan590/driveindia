@@ -13,6 +13,7 @@ const documentUpload = require('../config/documentUpload');
 // Public routes
 router.post('/register', authController.register);
 router.post('/login', authController.login);
+router.post('/forgot-password', authController.forgotPassword);
 
 // Protected routes
 router.get('/profile', verifyToken, authController.getUserProfile);

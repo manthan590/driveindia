@@ -123,6 +123,12 @@ const verifySubscription = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Transaction ID and Plan ID are required' });
         }
 
+        // Validate transaction ID format (12-digit UTR or alphanumeric 8-22 chars)
+        const txnId = transaction_id.trim();
+        if (!/^[A-Za-z0-9]{8,22}$/.test(txnId)) {
+            return res.status(400).json({ success: false, message: 'Invalid Transaction ID. Enter a valid 8-22 character alphanumeric UTR/Transaction ID.' });
+        }
+
         const connection = await pool.getConnection();
         try {
             const [plans] = await connection.query('SELECT * FROM plans WHERE id = ?', [plan_id]);

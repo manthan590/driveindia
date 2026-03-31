@@ -31,6 +31,14 @@ class AuthModule {
                 this.handleLogin();
             }
         });
+
+        // Forgot password form
+        document.addEventListener('submit', (e) => {
+            if (e.target.id === 'forgotPasswordForm') {
+                e.preventDefault();
+                this.handleForgotPassword();
+            }
+        });
     }
 
     // Show auth pages
@@ -405,6 +413,11 @@ class AuthModule {
                             Create account &rarr;
                         </button>
                     </p>
+                    <p style="text-align: center; margin-top: 8px;">
+                        <button style="background: none; border: none; color: #fb923c; cursor: pointer; font-size: 0.82rem; font-family: 'JetBrains Mono', monospace;" id="switchToForgot">
+                            Forgot password?
+                        </button>
+                    </p>
 
                 </div>
             </div>
@@ -495,6 +508,50 @@ class AuthModule {
         `;
     }
 
+    static renderForgotPasswordForm() {
+        return `
+            <div style="background: #161b22; border: 1px solid #30363d; border-radius: 12px; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.5);">
+                <div style="background: #21262d; padding: 10px 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #30363d;">
+                    <span style="width: 10px; height: 10px; border-radius: 50%; background: #f87171;"></span>
+                    <span style="width: 10px; height: 10px; border-radius: 50%; background: #fbbf24;"></span>
+                    <span style="width: 10px; height: 10px; border-radius: 50%; background: #4ade80;"></span>
+                    <span style="color: #6e7681; margin-left: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;">reset-password.sh</span>
+                </div>
+
+                <div style="padding: 32px;">
+                    <h2 style="margin-top: 0; margin-bottom: 4px; color: #e6edf3; font-size: 1.4rem;">Reset Password</h2>
+                    <p style="color: #6e7681; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; margin-bottom: 28px;">// verify identity with Aadhaar to reset</p>
+
+                    <form id="forgotPasswordForm">
+                        <div class="form-group">
+                            <label for="forgotEmail">EMAIL</label>
+                            <input type="email" id="forgotEmail" placeholder="Your registered email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="forgotAadhaar">AADHAAR_NUMBER</label>
+                            <input type="text" id="forgotAadhaar" placeholder="12-digit Aadhaar linked to account" maxlength="12" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="forgotNewPassword">NEW_PASSWORD</label>
+                            <input type="password" id="forgotNewPassword" placeholder="Min 6 characters" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-full" style="margin-bottom: 16px; justify-content: center; padding: 12px; font-family: 'JetBrains Mono', monospace;">
+                            <i class="fas fa-key"></i> Reset Password
+                        </button>
+                    </form>
+
+                    <p style="text-align: center; color: #6e7681; font-size: 0.85rem;">
+                        Remember your password?
+                        <button style="background: none; border: none; color: #58a6ff; cursor: pointer; font-size: 0.85rem; font-family: inherit;" id="switchToLogin">
+                            &larr; Back to login
+                        </button>
+                    </p>
+                </div>
+            </div>
+        `;
+    }
+
     async handleLogin() {
         Spinner.show();
         try {
@@ -519,6 +576,36 @@ class AuthModule {
             }
         } catch (error) {
             Toast.error(error.message || 'Login failed');
+        } finally {
+            Spinner.hide();
+        }
+    }
+
+    async handleForgotPassword() {
+        Spinner.show();
+        try {
+            const email = document.getElementById('forgotEmail').value.trim();
+            const aadhaar_number = document.getElementById('forgotAadhaar').value.trim();
+            const new_password = document.getElementById('forgotNewPassword').value;
+
+            if (!/^\d{12}$/.test(aadhaar_number)) {
+                Toast.error('Enter a valid 12-digit Aadhaar number');
+                Spinner.hide();
+                return;
+            }
+            if (new_password.length < 6) {
+                Toast.error('Password must be at least 6 characters');
+                Spinner.hide();
+                return;
+            }
+
+            const response = await api.auth.forgotPassword({ email, aadhaar_number, new_password });
+            if (response.success) {
+                Toast.success(response.message);
+                document.getElementById('authForms').innerHTML = AuthModule.renderLoginForm();
+            }
+        } catch (error) {
+            Toast.error(error.message || 'Password reset failed');
         } finally {
             Spinner.hide();
         }
@@ -591,5 +678,7 @@ document.addEventListener('click', function(e) {
         document.getElementById('authForms').innerHTML = AuthModule.renderRegisterForm();
     } else if (e.target.id === 'switchToLogin') {
         document.getElementById('authForms').innerHTML = AuthModule.renderLoginForm();
+    } else if (e.target.id === 'switchToForgot') {
+        document.getElementById('authForms').innerHTML = AuthModule.renderForgotPasswordForm();
     }
 });

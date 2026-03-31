@@ -436,6 +436,51 @@ const submitKYC = async (req, res) => {
     }
 };
 
+// Forgot Password — reset via email + Aadhaar verification
+const forgotPassword = async (req, res) => {
+    try {
+        const { email, aadhaar_number, new_password } = req.body;
+
+        if (!email || !aadhaar_number || !new_password) {
+            return res.status(400).json({ success: false, message: 'Email, Aadhaar number, and new password are required' });
+        }
+        if (new_password.length < 6) {
+            return res.status(400).json({ success: false, message: 'New password must be at least 6 characters' });
+        }
+        if (!/^\d{12}$/.test(aadhaar_number)) {
+            return res.status(400).json({ success: false, message: 'Enter a valid 12-digit Aadhaar number' });
+        }
+
+        const connection = await pool.getConnection();
+        try {
+            const [users] = await connection.query(
+                'SELECT id, aadhaar_number FROM users WHERE email = ?',
+                [email]
+            );
+            if (users.length === 0) {
+                connection.release();
+                return res.status(404).json({ success: false, message: 'No account found with this email' });
+            }
+            if (!users[0].aadhaar_number || users[0].aadhaar_number !== aadhaar_number) {
+                connection.release();
+                return res.status(400).json({ success: false, message: 'Aadhaar number does not match our records' });
+            }
+
+            const hashed = await hashPassword(new_password);
+            await connection.query('UPDATE users SET password = ? WHERE id = ?', [hashed, users[0].id]);
+            connection.release();
+
+            return res.json({ success: true, message: 'Password reset successfully! You can now login with your new password.' });
+        } catch (error) {
+            connection.release();
+            throw error;
+        }
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        res.status(500).json({ success: false, message: 'Password reset failed' });
+    }
+};
+
 module.exports = {
     register,
     login,
@@ -445,5 +490,6 @@ module.exports = {
     uploadPhoto,
     verifyAadhaar,
     uploadDocument,
-    submitKYC
+    submitKYC,
+    forgotPassword
 };

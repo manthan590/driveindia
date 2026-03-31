@@ -79,7 +79,8 @@ class ApiService {
         uploadPhoto: (formData) => this.requestFormData('POST', '/auth/upload-photo', formData),
         verifyAadhaar: (aadhaar_number) => this.request('POST', '/auth/verify-aadhaar', { aadhaar_number }),
         uploadDocument: (formData) => this.requestFormData('POST', '/auth/upload-document', formData),
-        submitKYC: () => this.request('POST', '/auth/submit-kyc')
+        submitKYC: () => this.request('POST', '/auth/submit-kyc'),
+        forgotPassword: (data) => this.request('POST', '/auth/forgot-password', data, false)
     };
 
     // Subscription Endpoints
