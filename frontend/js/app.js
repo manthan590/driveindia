@@ -46,8 +46,8 @@ class Application {
             adminModule.loadDashboard();
             this.showPage('adminDashboard');
         } else {
-            bookingModule.loadBookings();
-            this.showPage('userDashboard');
+            vehiclesModule.loadVehicles();
+            this.showPage('vehiclesBrowse');
         }
     }
 
