@@ -354,7 +354,7 @@ const getKYCApplications = async (req, res) => {
         } else {
             query += " AND kyc_status IN ('submitted', 'verified', 'rejected')";
         }
-        query += ' ORDER BY FIELD(kyc_status, "submitted", "rejected", "verified"), updated_at DESC';
+        query += " ORDER BY FIELD(kyc_status, 'submitted', 'rejected', 'verified'), updated_at DESC";
 
         const connection = await pool.getConnection();
         try {
