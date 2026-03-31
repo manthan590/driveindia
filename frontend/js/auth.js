@@ -254,8 +254,8 @@ class AuthModule {
                                 <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: #8b949e;">UPI</span>
                             </div>
                             <div style="background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 14px 22px; display: flex; align-items: center; gap: 8px;">
-                                <i class="fas fa-credit-card" style="color: #c084fc;"></i>
-                                <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: #8b949e;">Razorpay</span>
+                                <i class="fas fa-user-check" style="color: #c084fc;"></i>
+                                <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: #8b949e;">KYC Verify</span>
                             </div>
                             <div style="background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 14px 22px; display: flex; align-items: center; gap: 8px;">
                                 <i class="fas fa-map" style="color: #4ade80;"></i>

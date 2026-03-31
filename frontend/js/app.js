@@ -1344,8 +1344,8 @@ class Application {
                         <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--text-secondary);">UPI</span>
                     </div>
                     <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px 24px; display: flex; align-items: center; gap: 10px; transition: var(--transition);" class="integration-logo">
-                        <i class="fas fa-credit-card" style="font-size: 1.3rem; color: var(--syntax-purple);"></i>
-                        <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--text-secondary);">Razorpay</span>
+                        <i class="fas fa-user-check" style="font-size: 1.3rem; color: var(--syntax-purple);"></i>
+                        <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--text-secondary);">KYC Verify</span>
                     </div>
                     <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px 24px; display: flex; align-items: center; gap: 10px; transition: var(--transition);" class="integration-logo">
                         <i class="fas fa-map" style="font-size: 1.3rem; color: var(--syntax-green);"></i>
