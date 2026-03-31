@@ -142,14 +142,14 @@ ON DUPLICATE KEY UPDATE id=id;
 -- Sample Vehicles
 INSERT INTO vehicles (name, type, fuel_type, price_per_day, location, availability_status, image_url, registration_number, capacity, description)
 VALUES
-('Maruti Swift', 'Car', 'Petrol', 1500, 'Mumbai', TRUE, 'https://placehold.co/300x200?text=Maruti+Swift', 'MH01AB1234', 5, 'Compact car, automatic transmission'),
-('Hyundai Creta', 'Car', 'Diesel', 2500, 'Delhi', TRUE, 'https://placehold.co/300x200?text=Hyundai+Creta', 'DL01CD5678', 5, 'SUV, spacious interior, excellent mileage'),
-('Hero Honda CB Shine', 'Bike', 'Petrol', 800, 'Pune', TRUE, 'https://placehold.co/300x200?text=Hero+Honda', 'MH02EF9101', 2, 'Fuel efficient bike'),
-('TVS Jupiter', 'Scooter', 'Petrol', 500, 'Mumbai', TRUE, 'https://placehold.co/300x200?text=TVS+Jupiter', 'MH03GH1121', 2, 'Stylish scooter, automatic transmission'),
-('Tata Nexon EV', 'Car', 'Electric', 3000, 'Bangalore', TRUE, 'https://placehold.co/300x200?text=Tata+Nexon+EV', 'KA01IJ3141', 5, 'Electric vehicle, eco-friendly'),
-('Bajaj Avenger', 'Bike', 'Petrol', 900, 'Delhi', TRUE, 'https://placehold.co/300x200?text=Bajaj+Avenger', 'DL02KL5161', 2, 'Cruiser motorcycle'),
-('Honda Activa', 'Scooter', 'Petrol', 600, 'Pune', TRUE, 'https://placehold.co/300x200?text=Honda+Activa', 'MH04MN7181', 2, 'Popular automatic scooter'),
-('Mahindra XUV500', 'Car', 'Diesel', 3500, 'Mumbai', TRUE, 'https://placehold.co/300x200?text=Mahindra+XUV', 'MH05OP9201', 7, 'Premium SUV with all features')
+('Maruti Swift', 'Car', 'Petrol', 1500, 'Mumbai', TRUE, NULL, 'MH01AB1234', 5, 'Compact car, automatic transmission'),
+('Hyundai Creta', 'Car', 'Diesel', 2500, 'Delhi', TRUE, NULL, 'DL01CD5678', 5, 'SUV, spacious interior, excellent mileage'),
+('Hero Honda CB Shine', 'Bike', 'Petrol', 800, 'Pune', TRUE, NULL, 'MH02EF9101', 2, 'Fuel efficient bike'),
+('TVS Jupiter', 'Scooter', 'Petrol', 500, 'Mumbai', TRUE, NULL, 'MH03GH1121', 2, 'Stylish scooter, automatic transmission'),
+('Tata Nexon EV', 'Car', 'Electric', 3000, 'Bangalore', TRUE, NULL, 'KA01IJ3141', 5, 'Electric vehicle, eco-friendly'),
+('Bajaj Avenger', 'Bike', 'Petrol', 900, 'Delhi', TRUE, NULL, 'DL02KL5161', 2, 'Cruiser motorcycle'),
+('Honda Activa', 'Scooter', 'Petrol', 600, 'Pune', TRUE, NULL, 'MH04MN7181', 2, 'Popular automatic scooter'),
+('Mahindra XUV500', 'Car', 'Diesel', 3500, 'Mumbai', TRUE, NULL, 'MH05OP9201', 7, 'Premium SUV with all features')
 ON DUPLICATE KEY UPDATE image_url = VALUES(image_url);
 
 -- Default Plans

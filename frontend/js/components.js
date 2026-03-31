@@ -25,10 +25,15 @@ class Components {
     static vehicleCard(vehicle) {
         const pricePerDay = formatUtils.formatCurrency(vehicle.price_per_day);
         const imgUrl = this.getImageUrl(vehicle.image_url);
+        const typeIcon = vehicle.type === 'Car' ? 'fa-car' : vehicle.type === 'Bike' ? 'fa-motorcycle' : 'fa-motorcycle';
         return `
             <div class="card vehicle-card" data-vehicle-id="${vehicle.id}">
-                <div class="card-image" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); height: 200px; border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 16px;">
-                    <img src="${imgUrl}" alt="${vehicle.name}" style="width: 100%; height: 100%; object-fit: cover; display: ${vehicle.image_url ? 'block' : 'none'};" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';"><div style="width:100%;height:100%;display:${vehicle.image_url ? 'none' : 'flex'};align-items:center;justify-content:center;" class="img-fallback-${vehicle.id}"><i class="fas fa-car" style="font-size:3rem;color:white;opacity:0.5;"></i></div>
+                <div class="card-image" style="background: linear-gradient(135deg, #1e293b, #334155); height: 200px; border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 16px; position: relative;">
+                    <div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;position:absolute;top:0;left:0;" class="img-fallback">
+                        <i class="fas ${typeIcon}" style="font-size:3rem;color:rgba(255,255,255,0.15);margin-bottom:8px;"></i>
+                        <span style="color:rgba(255,255,255,0.25);font-family:'JetBrains Mono',monospace;font-size:0.8rem;">${vehicle.name}</span>
+                    </div>
+                    ${imgUrl ? `<img src="${imgUrl}" alt="${vehicle.name}" style="width:100%;height:100%;object-fit:cover;position:relative;z-index:1;" onerror="this.remove();">` : ''}
                 </div>
                 <div class="card-body">
                     <h4>${vehicle.name}</h4>
@@ -63,12 +68,17 @@ class Components {
     static vehicleDetails(vehicle, bookedDates = []) {
         const pricePerDay = formatUtils.formatCurrency(vehicle.price_per_day);
         const imgUrl = this.getImageUrl(vehicle.image_url);
+        const typeIcon = vehicle.type === 'Car' ? 'fa-car' : vehicle.type === 'Bike' ? 'fa-motorcycle' : 'fa-motorcycle';
         return `
             <div class="grid grid-2">
                 <div>
                     <div class="card">
-                        <div style="background: linear-gradient(135deg, var(--primary), var(--secondary)); height: 300px; border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 16px;">
-                            <img src="${imgUrl}" alt="${vehicle.name}" style="width:100%;height:100%;object-fit:cover;display:${vehicle.image_url ? 'block' : 'none'};" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';"><div style="width:100%;height:100%;display:${vehicle.image_url ? 'none' : 'flex'};align-items:center;justify-content:center;"><i class="fas fa-car" style="font-size:5rem;color:white;opacity:0.3;"></i></div>
+                        <div style="background: linear-gradient(135deg, #1e293b, #334155); height: 300px; border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 16px; position: relative;">
+                            <div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;position:absolute;top:0;left:0;">
+                                <i class="fas ${typeIcon}" style="font-size:5rem;color:rgba(255,255,255,0.15);margin-bottom:12px;"></i>
+                                <span style="color:rgba(255,255,255,0.25);font-family:'JetBrains Mono',monospace;font-size:1rem;">${vehicle.name}</span>
+                            </div>
+                            ${imgUrl ? `<img src="${imgUrl}" alt="${vehicle.name}" style="width:100%;height:100%;object-fit:cover;position:relative;z-index:1;" onerror="this.remove();">` : ''}
                         </div>
                         <div class="card-body">
                             <h3>${vehicle.name}</h3>
