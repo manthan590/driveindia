@@ -910,7 +910,7 @@ class Application {
                         </div>
                     ` : ''}
 
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                    <div class="plans-grid">
                         ${plans.map((plan, i) => {
                             const colors = ['var(--syntax-blue)', 'var(--syntax-purple)', 'var(--syntax-green)'];
                             const icons = ['fa-calendar-day', 'fa-calendar-week', 'fa-calendar-alt'];
